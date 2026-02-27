@@ -1,20 +1,15 @@
 #!/usr/bin/env python3
 """
 Pull historical PM2.5 from PurpleAir sensors along the Hyde Park plume path.
-
-Fetches hourly-averaged data for selected sensors at varying distances
-from Hyde Park, covering the major smell episode dates (Oct 2025).
+Round 2: adds 8 sensors to fill gaps in the 5–10 mi range.
 
 Usage:
     export PURPLEAIR_API_KEY="your-read-key-here"
-    python purpleair_history_pull.py
+    python purpleair_history_pull_r2.py
 
 Outputs:
-    purpleair_plume_history.csv  — combined hourly PM2.5 for all sensors
-    (one row per sensor per hour, with distance/bearing metadata)
-
-Rate limiting: the PurpleAir API allows ~1 request/second for history.
-This script sleeps between requests accordingly.
+    purpleair_plume_history_r2.csv  — hourly PM2.5 for the NEW sensors only
+    (merge with purpleair_plume_history.csv for the complete dataset)
 """
 
 import os
@@ -22,79 +17,43 @@ import sys
 import csv
 import json
 import time
-import math
-import urllib.request
 from datetime import datetime, timezone
+import urllib.request
 
 API_KEY = os.environ.get("PURPLEAIR_API_KEY", "")
 if not API_KEY:
     print("Set PURPLEAIR_API_KEY environment variable first.")
     sys.exit(1)
 
-# ── Sensors to pull ──
-# Selected for: active, good bearing alignment (~145–165°), spread across distance bands.
-# Ordered near-source → Hyde Park so output reads intuitively.
-#
-# Adjust this list based on your sensor scan results. The sensor_index
-# values below come from the purpleair_plume_sensors.json output.
-
+# ── Round 2 sensors (gap-fillers only) ──
 SENSORS = [
-    # (sensor_index, name, dist_mi, bearing) — from scan results
-    # ~19 mi — near Gary Works
-    (146228, "Progressive Community Church (NLCEP)", 19.1, 135),
-    # ~12–13 mi — near SunCoke / BP Whiting
-    (185123, "Harborworks (NLCEP)",                 12.9, 146),
-    (185079, "Canalport (NLCEP)",                   12.4, 148),
-    (203661, "Harrison Elementary",                 12.4, 153),
-    # ~10–11 mi
-    (220241, "MCC08 OUT",                           11.4, 162),
-    (220537, "MCC07 OUT",                           10.4, 164),
-    # ~9–10 mi — Whiting / far Calumet
-    (146258, "CCSJ (NLCEP)",                         9.9, 150),
-    (146110, "Lake George (NLCEP)",                  9.5, 151),
-    # ~7–8 mi — SE Chicago
-    (193797, "Tiger",                                7.3, 154),
-    (193669, "Bug",                                  6.9, 155),
-    # ~5–6 mi — midpath
-    (193803, "Penguin",                              5.7, 152),
-    (193676, "Rooster",                              5.4, 150),
-    # ~0 mi — Hyde Park
-    (153638, "Purple-HP-1",                          0.1, 152),
+    # 9–10 mi — filling the Whiting gap
+    (185095, "Oliver (NLCEP)",              9.2, 148),
+    (208687, "Whiting City Hall",           9.4, 148),
+    (172085, "Peach",                       9.2, 147),
+    # 7–9 mi — filling the empty band between Bug (6.9) and Lake George (9.5)
+    (193807, "Smeller",                     7.1, 153),
+    (193684, "Robin",                       7.4, 155),
+    (220577, "MCC06 OUT",                   7.8, 158),
+    # 5–7 mi — backfilling for lost Penguin/Tiger
+    (175455, "LUC_CARE_13",                 5.6, 160),
+    (193673, "Nala",                        6.7, 155),
 ]
-
-# ── Date ranges to pull ──
-# Cover the full study period plus a buffer day on each side.
-# The API uses Unix timestamps.
-#
-# Major episodes from your notebook:
-#   Oct 9–10 (SSW wind, Calumet corridor)
-#   Oct 12   (SE wind, biggest cluster)
-#   Oct 16–17
-#   Oct 25–26
-#   Oct 31   (westerly, different source)
-#   Nov 3    (westerly)
 
 START = datetime(2025, 10, 1, 0, 0, tzinfo=timezone.utc)
 END   = datetime(2025, 11, 6, 0, 0, tzinfo=timezone.utc)
-
-# PurpleAir history API limits to ~14 days per request for hourly data.
-# We'll chunk into 14-day windows.
 CHUNK_DAYS = 14
 
-# ── API helper ──
-def fetch_sensor_history(sensor_index, start_ts, end_ts):
-    """Fetch hourly PM2.5 history for one sensor, one time window.
-    Returns list of (unix_timestamp, pm25_a, pm25_b) tuples."""
 
+def fetch_sensor_history(sensor_index, start_ts, end_ts):
     fields = "pm2.5_atm_a,pm2.5_atm_b"
     url = (
         f"https://api.purpleair.com/v1/sensors/{sensor_index}/history/csv"
         f"?fields={fields}"
         f"&start_timestamp={start_ts}"
         f"&end_timestamp={end_ts}"
-        f"&average=60"  # hourly average
+        f"&average=60"
     )
-
     req = urllib.request.Request(url, headers={"X-API-Key": API_KEY})
     try:
         with urllib.request.urlopen(req) as resp:
@@ -124,7 +83,6 @@ def fetch_sensor_history(sensor_index, start_ts, end_ts):
 
 
 def chunked_ranges(start_dt, end_dt, chunk_days):
-    """Yield (start_ts, end_ts) Unix timestamp pairs in chunks."""
     chunk_sec = chunk_days * 86400
     s = int(start_dt.timestamp())
     e = int(end_dt.timestamp())
@@ -133,10 +91,8 @@ def chunked_ranges(start_dt, end_dt, chunk_days):
         s += chunk_sec
 
 
-# ── Main ──
-print(f"Pulling hourly PM2.5 for {len(SENSORS)} sensors")
+print(f"Round 2: pulling {len(SENSORS)} additional sensors")
 print(f"Period: {START.date()} to {END.date()}")
-print(f"Chunks of {CHUNK_DAYS} days each")
 print()
 
 all_rows = []
@@ -155,7 +111,6 @@ for idx, (sensor_index, name, dist_mi, bearing) in enumerate(SENSORS):
         sensor_rows += len(rows)
 
         for ts, pm_a, pm_b in rows:
-            # Average channels A and B for the best PM2.5 estimate
             try:
                 a = float(pm_a) if pm_a else None
                 b = float(pm_b) if pm_b else None
@@ -182,13 +137,12 @@ for idx, (sensor_index, name, dist_mi, bearing) in enumerate(SENSORS):
                 "pm25_avg": pm25,
             })
 
-        # Rate limit: ~1 req/sec
         time.sleep(1.1)
 
     print(f"    → {sensor_rows} total hours\n")
 
 # ── Write CSV ──
-outfile = "purpleair_plume_history.csv"
+outfile = "purpleair_plume_history_r2.csv"
 fieldnames = ["time_utc", "sensor_index", "name", "dist_mi", "bearing",
               "pm25_a", "pm25_b", "pm25_avg"]
 
@@ -199,8 +153,9 @@ with open(outfile, "w", newline="") as f:
 
 print(f"Done. {len(all_rows)} rows written to {outfile}")
 print()
-print("Next steps:")
-print("  1. Load this CSV alongside your smell reports + weather data")
-print("  2. For each episode, plot PM2.5 by distance over time")
-print("     (nearer-source sensors should spike first if plume is real)")
-print("  3. Check channel A vs B agreement — large divergence = suspect data")
+print("To combine with round 1:")
+print("  import pandas as pd")
+print("  r1 = pd.read_csv('purpleair_plume_history.csv')")
+print("  r2 = pd.read_csv('purpleair_plume_history_r2.csv')")
+print("  combined = pd.concat([r1, r2], ignore_index=True)")
+print("  combined.to_csv('purpleair_plume_history_combined.csv', index=False)")
