@@ -1,15 +1,30 @@
 #!/usr/bin/env python3
 """
-Pull historical PM2.5 from PurpleAir sensors along the Hyde Park plume path.
-Round 2: adds 8 sensors to fill gaps in the 5–10 mi range.
+Pull historical PM2.5 from PurpleAir sensors along the Hyde Park → Calumet
+/ NW Indiana plume path.
+
+This script queries ALL candidate sensors selected for the analysis.
+Sensors that return no data for the study period are included in the
+output with zero rows — so readers can see exactly which sensors were
+attempted and which had data.
+
+Sensor selection criteria:
+  1. Outdoor sensors only (location_type=0)
+  2. Bearing 135°–165° from Hyde Park (the SE plume corridor identified
+     in the wind-direction analysis, pointing toward the Calumet industrial
+     corridor and NW Indiana heavy industry)
+  3. Reported to PurpleAir within the 90 days prior to the analysis
+  4. Spaced across distance bands from source (~19 mi) to observer (~0 mi)
+     to enable plume-propagation analysis
+
+Requires:
+    export PURPLEAIR_API_KEY="your-read-key-here"
 
 Usage:
-    export PURPLEAIR_API_KEY="your-read-key-here"
-    python purpleair_history_pull_r2.py
+    python purpleair_history_pull_all.py
 
 Outputs:
-    purpleair_plume_history_r2.csv  — hourly PM2.5 for the NEW sensors only
-    (merge with purpleair_plume_history.csv for the complete dataset)
+    purpleair_plume_history_all.csv
 """
 
 import os
@@ -25,27 +40,68 @@ if not API_KEY:
     print("Set PURPLEAIR_API_KEY environment variable first.")
     sys.exit(1)
 
-# ── Round 2 sensors (gap-fillers only) ──
-SENSORS = [
-    # 9–10 mi — filling the Whiting gap
-    (185095, "Oliver (NLCEP)",              9.2, 148),
-    (208687, "Whiting City Hall",           9.4, 148),
-    (172085, "Peach",                       9.2, 147),
-    # 7–9 mi — filling the empty band between Bug (6.9) and Lake George (9.5)
-    (193807, "Smeller",                     7.1, 153),
-    (193684, "Robin",                       7.4, 155),
-    (220577, "MCC06 OUT",                   7.8, 158),
-    # 5–7 mi — backfilling for lost Penguin/Tiger
-    (175455, "LUC_CARE_13",                 5.6, 160),
-    (193673, "Nala",                        6.7, 155),
-]
-
+# ── Study period ──
+# Covers the full smell report window (Oct 7 – Nov 3, 2025) with buffer.
 START = datetime(2025, 10, 1, 0, 0, tzinfo=timezone.utc)
 END   = datetime(2025, 11, 6, 0, 0, tzinfo=timezone.utc)
-CHUNK_DAYS = 14
+CHUNK_DAYS = 14  # API limit for hourly data per request
 
+# ── All candidate sensors ──
+# Every sensor attempted across both analysis rounds.
+# Sorted source-to-observer (descending distance from Hyde Park).
+#
+# Selection was drawn from a bounding-box scan of all outdoor PurpleAir
+# sensors between Hyde Park (41.85, -87.70) and Gary, IN (41.58, -87.30)
+# using the PurpleAir /v1/sensors endpoint. That scan found 73 outdoor
+# sensors in the SE arc (bearing 90°–200°). From those, we selected
+# sensors on bearings 135°–165° with at least one sensor per ~2-mile
+# distance band, favoring NLCEP and MCC-series sensors for reliability,
+# and adding community sensors (animal-named series, LUC_CARE) for
+# density in the critical 5–10 mile range.
+
+SENSORS = [
+    # ── ~19 mi: near US Steel Gary Works ──
+    (146228, "Progressive Community Church (NLCEP)", 19.1, 135),
+
+    # ── ~12–13 mi: near Acme/SunCoke and BP Whiting ──
+    (185123, "Harborworks (NLCEP)",                 12.9, 146),
+    (185079, "Canalport (NLCEP)",                   12.4, 148),
+    (203661, "Harrison Elementary",                 12.4, 153),
+
+    # ── ~10–11 mi: mid-corridor ──
+    (220241, "MCC08 OUT",                           11.4, 162),
+    (220537, "MCC07 OUT",                           10.4, 164),
+
+    # ── ~9–10 mi: Whiting / East Chicago area ──
+    (146258, "CCSJ (NLCEP)",                         9.9, 150),
+    (146110, "Lake George (NLCEP)",                  9.5, 151),
+    (208687, "Whiting City Hall",                    9.4, 148),
+    (185095, "Oliver (NLCEP)",                       9.2, 148),
+    (172085, "Peach",                                9.2, 147),
+
+    # ── ~7–8 mi: SE Chicago ──
+    (220577, "MCC06 OUT",                            7.8, 158),
+    (193684, "Robin",                                7.4, 155),
+    (193807, "Smeller",                              7.1, 153),
+    (193669, "Bug",                                  6.9, 155),
+
+    # ── ~5–7 mi: mid-path ──
+    (193673, "Nala",                                 6.7, 155),
+    (193797, "Tiger",                                7.3, 154),
+    (193803, "Penguin",                              5.7, 152),
+    (175455, "LUC_CARE_13",                          5.6, 160),
+    (193676, "Rooster",                              5.4, 150),
+
+    # ── ~0 mi: Hyde Park (observation point) ──
+    (153638, "Purple-HP-1",                          0.1, 152),
+]
+
+# ── API helpers ──
 
 def fetch_sensor_history(sensor_index, start_ts, end_ts):
+    """Fetch hourly PM2.5 history for one sensor, one time window.
+    Returns list of (unix_timestamp, pm25_a, pm25_b) tuples."""
+
     fields = "pm2.5_atm_a,pm2.5_atm_b"
     url = (
         f"https://api.purpleair.com/v1/sensors/{sensor_index}/history/csv"
@@ -83,6 +139,7 @@ def fetch_sensor_history(sensor_index, start_ts, end_ts):
 
 
 def chunked_ranges(start_dt, end_dt, chunk_days):
+    """Yield (start_ts, end_ts) Unix timestamp pairs in chunks."""
     chunk_sec = chunk_days * 86400
     s = int(start_dt.timestamp())
     e = int(end_dt.timestamp())
@@ -91,11 +148,30 @@ def chunked_ranges(start_dt, end_dt, chunk_days):
         s += chunk_sec
 
 
-print(f"Round 2: pulling {len(SENSORS)} additional sensors")
+def avg_pm25(pm_a_str, pm_b_str):
+    """Average channels A and B, tolerating missing values."""
+    try:
+        a = float(pm_a_str) if pm_a_str else None
+        b = float(pm_b_str) if pm_b_str else None
+        if a is not None and b is not None:
+            return round((a + b) / 2, 2)
+        elif a is not None:
+            return round(a, 2)
+        elif b is not None:
+            return round(b, 2)
+    except ValueError:
+        pass
+    return ""
+
+
+# ── Main ──
+
+print(f"Querying {len(SENSORS)} sensors")
 print(f"Period: {START.date()} to {END.date()}")
-print()
+print(f"Chunks of {CHUNK_DAYS} days\n")
 
 all_rows = []
+sensor_summary = []
 
 for idx, (sensor_index, name, dist_mi, bearing) in enumerate(SENSORS):
     print(f"[{idx+1}/{len(SENSORS)}] {name} (#{sensor_index}, {dist_mi} mi, {bearing}°)")
@@ -111,20 +187,6 @@ for idx, (sensor_index, name, dist_mi, bearing) in enumerate(SENSORS):
         sensor_rows += len(rows)
 
         for ts, pm_a, pm_b in rows:
-            try:
-                a = float(pm_a) if pm_a else None
-                b = float(pm_b) if pm_b else None
-                if a is not None and b is not None:
-                    pm25 = round((a + b) / 2, 2)
-                elif a is not None:
-                    pm25 = round(a, 2)
-                elif b is not None:
-                    pm25 = round(b, 2)
-                else:
-                    pm25 = ""
-            except ValueError:
-                pm25 = ""
-
             dt = datetime.fromtimestamp(ts, tz=timezone.utc)
             all_rows.append({
                 "time_utc": dt.strftime("%Y-%m-%d %H:%M:%S"),
@@ -134,15 +196,17 @@ for idx, (sensor_index, name, dist_mi, bearing) in enumerate(SENSORS):
                 "bearing": bearing,
                 "pm25_a": pm_a,
                 "pm25_b": pm_b,
-                "pm25_avg": pm25,
+                "pm25_avg": avg_pm25(pm_a, pm_b),
             })
 
         time.sleep(1.1)
 
-    print(f"    → {sensor_rows} total hours\n")
+    sensor_summary.append((sensor_index, name, dist_mi, bearing, sensor_rows))
+    status = f"{sensor_rows} hours" if sensor_rows > 0 else "NO DATA"
+    print(f"    → {status}\n")
 
-# ── Write CSV ──
-outfile = "purpleair_plume_history_r2.csv"
+# ── Write data CSV ──
+outfile = "purpleair_plume_history_all.csv"
 fieldnames = ["time_utc", "sensor_index", "name", "dist_mi", "bearing",
               "pm25_a", "pm25_b", "pm25_avg"]
 
@@ -151,11 +215,17 @@ with open(outfile, "w", newline="") as f:
     writer.writeheader()
     writer.writerows(all_rows)
 
-print(f"Done. {len(all_rows)} rows written to {outfile}")
+# ── Print summary ──
+print("=" * 75)
+print(f"RESULTS: {len(all_rows)} rows written to {outfile}")
+print("=" * 75)
 print()
-print("To combine with round 1:")
-print("  import pandas as pd")
-print("  r1 = pd.read_csv('purpleair_plume_history.csv')")
-print("  r2 = pd.read_csv('purpleair_plume_history_r2.csv')")
-print("  combined = pd.concat([r1, r2], ignore_index=True)")
-print("  combined.to_csv('purpleair_plume_history_combined.csv', index=False)")
+print(f"{'Sensor':<42s} {'Dist':>5s} {'Brg':>4s} {'Hours':>6s}  Status")
+print("-" * 75)
+for sid, name, dist, brg, hours in sensor_summary:
+    status = f"{hours} hours" if hours > 0 else "NO DATA for study period"
+    print(f"{name:<42s} {dist:5.1f} {brg:4d}° {hours:>6d}  {status}")
+
+reporting = sum(1 for _, _, _, _, h in sensor_summary if h > 0)
+empty = sum(1 for _, _, _, _, h in sensor_summary if h == 0)
+print(f"\n{reporting} sensors with data, {empty} sensors with no data for this period")
