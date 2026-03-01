@@ -12,7 +12,7 @@ This is an ongoing, open-source investigation. The data, code, and methodology a
 
 ## Key Findings
 
-**1. The smell comes from the southeast.** 62% of real-time reports occurred during southeast or east winds, compared to only 31% of all hours in the same period. The smell is 2.0× more likely when wind blows from the SE.[^enrichment] When wind comes from the north or west, reports drop off sharply.
+**1. The smell comes from the southeast.** 62% of real-time reports occurred during southeast or east winds, compared to only 31% of all hours in the same period. The smell is 2.0× more likely when wind blows from the SE — a result that is statistically significant (p = 0.0015, one-sided binomial test).[^enrichment] When wind comes from the north or west, reports drop off sharply.
 
 **2. The source area is the Calumet industrial corridor and northwest Indiana**, 10–18 miles southeast of Hyde Park. A cluster of heavy industrial facilities sits at bearings 133°–176° from Hyde Park, directly aligned with the wind during smell episodes. The top candidates by wind-bearing match are:
 
@@ -70,6 +70,7 @@ Of the 39 total reports, 27 were real-time ("Just Now" or submitted before the t
 - **16 of 26 (62%)** occurred during SE wind (67.5°–180°)
 - **SE wind occurs only 31% of the time** during the study period overall
 - **Enrichment ratio: 2.0×** — you are twice as likely to smell the odor when the wind blows from the SE[^enrichment]
+- **One-sided binomial test: p = 0.0015** — the probability of seeing 16 or more SE-wind reports out of 26 by chance (given a 31% baseline) is less than 1 in 600
 
 ### Episode timeline
 
@@ -199,7 +200,7 @@ For completeness: TMS International (Gary Works scrap operations), Industrial St
 
 This analysis has several important limitations:
 
-**Sample size.** 39 reports from a convenience sample — not a random population survey. The 2.0× SE wind enrichment is consistent and directional, but the small sample limits statistical power.[^enrichment]
+**Sample size.** 39 reports from a convenience sample — not a random population survey. Despite the small sample, the 2.0× SE wind enrichment is statistically significant (p = 0.0015).[^enrichment] However, the sample is too small to distinguish between individual facilities or detect weaker secondary patterns.
 
 **Hourly wind resolution.** We match reports to the nearest hourly wind observation. The actual wind at the moment of the smell may differ, especially during transition periods.
 
@@ -228,7 +229,7 @@ This analysis establishes a strong directional signal and temporal correlation b
 
 ## Footnotes
 
-[^enrichment]: The enrichment ratio is the fraction of smell reports during SE wind divided by the fraction of all hours with SE wind: 62% / 31% = 2.0×. This is a descriptive statistic; a formal hypothesis test (e.g., Fisher's exact test) would provide a p-value. With 26 reports, the sample is small but the directional pattern is consistent across episodes.
+[^enrichment]: The enrichment ratio is the fraction of smell reports during SE wind divided by the fraction of all hours with SE wind: 62% / 31% = 2.0×. A one-sided binomial test confirms this is statistically significant: P(X ≥ 16 | n=26, p=0.31) = 0.0015, well below the conventional α = 0.01 threshold. Despite the small sample, the wind–smell association is unlikely to be due to chance.
 
 [^coke-odor]: Coke oven emissions contain over 200 identified compounds including PAHs, benzene, toluene, xylene, phenol, and naphthalene. EPA classifies coke oven emissions as a known human carcinogen. The sensory profile — described in occupational health literature as acrid, tarry, and chemical — is consistent with the "burning plastic" descriptor used by Hyde Park residents. See: EPA, "Coke Oven Emissions — Hazard Summary," Technology Transfer Network Air Toxics; ATSDR, "Toxicological Profile for Coke Oven Emissions" (2017 update).
 
