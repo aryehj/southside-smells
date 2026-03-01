@@ -103,7 +103,7 @@ At 10–15 miles, atmospheric turbulence disperses a plume across a broad arc.[^
 
 ### Sensor network
 
-We queried the PurpleAir API for outdoor sensors along the SE corridor from Hyde Park to Gary, IN. Of 73 outdoor sensors in the SE arc, we selected 21 on bearings 135°–165° — aligned with BP Whiting (154°), IHCC (146°), and the Calumet facilities. Thirteen returned data for October 2025. The retrieval script is at `code/purpleair_history_pull_all.py`.
+We queried the PurpleAir API for outdoor sensors along the SE corridor from Hyde Park to Gary, IN. Of 73 outdoor sensors in the SE arc, we selected 21 on bearings 135°–165° — aligned with BP Whiting (154°), IHCC (146°), and the Calumet facilities. Thirteen returned data for October 2025. The retrieval script is at `code/purpleair_history_pull.py`.
 
 Five sensors at well-spaced distances serve as the primary reference set:
 
