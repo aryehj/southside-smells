@@ -12,7 +12,7 @@ This is an ongoing, open-source investigation. The data, code, and methodology a
 
 ## Key Findings
 
-**1. The smell comes from the southeast.** 62% of real-time reports occurred during southeast or east winds, compared to only 31% of all hours in the same period. The smell is 2.0× more likely when wind blows from the SE — a result that is statistically significant (p = 0.0015, one-sided binomial test).[^enrichment] When wind comes from the north or west, reports drop off sharply.
+**1. The smell comes from the southeast.** 62% of real-time reports occurred during southeast or east winds, compared to only 31% of all hours in the same period. The smell is 2.0× more likely when wind blows from the SE — a result that is statistically significant by a one-sided binomial test (p = 0.0015).[^enrichment] A more conservative episode-level circular-shift permutation test, which accounts for temporal clustering of reports and autocorrelation in wind direction, yields p ≈ 0.06–0.13 depending on the gap threshold used to define episodes — suggestive but not conventionally significant.[^permutation] When wind comes from the north or west, reports drop off sharply.
 
 **2. The source area is the Calumet industrial corridor and northwest Indiana**, 10–18 miles southeast of Hyde Park. A cluster of heavy industrial facilities sits at bearings 133°–176° from Hyde Park, directly aligned with the wind during smell episodes. The top candidates by wind-bearing match are:
 
@@ -49,7 +49,7 @@ This is an ongoing, open-source investigation. The data, code, and methodology a
 
 The analysis proceeds in four steps, each building on the last:
 
-1. **Wind correlation.** We matched each real-time smell report to the hourly wind observation and asked: does the wind come from a consistent direction during smell episodes? It does — overwhelmingly from the SE.
+1. **Wind correlation.** We matched each real-time smell report to the hourly wind observation and asked: does the wind come from a consistent direction during smell episodes? It does — overwhelmingly from the SE. We tested significance with both a binomial test (treating reports as independent) and an episode-level circular-shift permutation test (accounting for temporal clustering and wind autocorrelation).
 
 2. **Source matching.** We computed the bearing from Hyde Park to every major industrial facility in the Calumet corridor and NW Indiana, then checked how closely the wind during each episode aligned with each facility's bearing.
 
@@ -71,6 +71,7 @@ Of the 39 total reports, 27 were real-time ("Just Now" or submitted before the t
 - **SE wind occurs only 31% of the time** during the study period overall
 - **Enrichment ratio: 2.0×** — you are twice as likely to smell the odor when the wind blows from the SE[^enrichment]
 - **One-sided binomial test: p = 0.0015** — the probability of seeing 16 or more SE-wind reports out of 26 by chance (given a 31% baseline) is less than 1 in 600
+- **Episode-level permutation test: p ≈ 0.06–0.13** — when reports are collapsed into distinct smell episodes and tested against circularly-shifted wind data (preserving autocorrelation), the result remains directionally strong but is no longer significant at the conventional α = 0.05 threshold[^permutation]
 
 ### Episode timeline
 
@@ -92,6 +93,14 @@ The major smell episodes were:
 ![Polar source map: industrial facilities vs. wind during reports](figures/fig_source_map.png)
 
 ![Angular alignment between wind and each source](figures/fig_source_alignment.png)
+
+### Accounting for temporal clustering: permutation test
+
+The binomial test above treats each of the 26 reports as an independent trial. In reality, reports cluster during the same multi-hour wind episodes — for example, 6 of the 26 reports came on October 12 alone, all during the same SE wind event. This clustering inflates the effective sample size and overstates the binomial p-value's confidence.
+
+To address this, we collapse consecutive reports (gap < 6 hours) into distinct **smell episodes** and apply a **circular time-shift permutation test**: all episode timestamps are shifted by a single random offset (wrapping around the study period), and the wind direction is read at the shifted times. This preserves both the autocorrelation structure of the wind series and the temporal spacing between episodes. Over 10,000 permutations, the fraction of shifts producing an SE-wind enrichment as large as observed yields a p-value of approximately 0.06–0.13, depending on the gap threshold used to define episodes (3 to 24 hours).[^permutation]
+
+The permutation test confirms that the directional signal is real — the observed SE enrichment exceeds roughly 90–94% of random circular shifts — but the effective sample of independent episodes is small enough that conventional statistical significance (α = 0.05) is not achieved. The physical evidence from PM2.5 plume tracking and compliance records provides corroboration that the wind-based statistical tests alone cannot.
 
 ### Why we probably can't pin it to one facility
 
@@ -200,7 +209,7 @@ For completeness: TMS International (Gary Works scrap operations), Industrial St
 
 This analysis has several important limitations:
 
-**Sample size.** 39 reports from a convenience sample — not a random population survey. Despite the small sample, the 2.0× SE wind enrichment is statistically significant (p = 0.0015).[^enrichment] However, the sample is too small to distinguish between individual facilities or detect weaker secondary patterns.
+**Sample size.** 39 reports from a convenience sample — not a random population survey. The 2.0× SE wind enrichment is statistically significant when reports are treated independently (binomial p = 0.0015),[^enrichment] but a permutation test that accounts for temporal clustering yields p ≈ 0.06–0.13.[^permutation] The directional signal is strong and corroborated by physical evidence, but the effective number of independent smell episodes is small — too small to achieve conventional significance on wind data alone, and too small to distinguish between individual facilities or detect weaker secondary patterns.
 
 **Hourly wind resolution.** We match reports to the nearest hourly wind observation. The actual wind at the moment of the smell may differ, especially during transition periods.
 
@@ -229,7 +238,9 @@ This analysis establishes a strong directional signal and temporal correlation b
 
 ## Footnotes
 
-[^enrichment]: The enrichment ratio is the fraction of smell reports during SE wind divided by the fraction of all hours with SE wind: 62% / 31% = 2.0×. A one-sided binomial test confirms this is statistically significant: P(X ≥ 16 | n=26, p=0.31) = 0.0015, well below the conventional α = 0.01 threshold. Despite the small sample, the wind–smell association is unlikely to be due to chance.
+[^enrichment]: The enrichment ratio is the fraction of smell reports during SE wind divided by the fraction of all hours with SE wind: 62% / 31% = 2.0×. A one-sided binomial test yields P(X ≥ 16 | n=26, p=0.31) = 0.0015, well below the conventional α = 0.01 threshold. However, because reports cluster temporally, the binomial test overstates confidence — see the permutation test[^permutation] for an independence-robust alternative.
+
+[^permutation]: The episode-level circular-shift permutation test collapses clustered reports into distinct smell episodes (consecutive reports within 6 hours = one event), then shifts all episode timestamps by a single random offset modulo the study period length and reads the wind direction at the shifted times. This preserves the autocorrelation structure of the wind series, the temporal spacing between episodes, and the number of reports per episode. Over 10,000 random circular shifts, the permutation p-value is approximately 0.06–0.13 across gap thresholds of 3, 6, 12, and 24 hours. The result is directionally robust (the observed SE enrichment exceeds ~90–94% of random shifts) but does not reach conventional significance (α = 0.05), reflecting the small number of independent episodes. See the analysis notebook, Section 3.
 
 [^coke-odor]: Coke oven emissions contain over 200 identified compounds including PAHs, benzene, toluene, xylene, phenol, and naphthalene. EPA classifies coke oven emissions as a known human carcinogen. The sensory profile — described in occupational health literature as acrid, tarry, and chemical — is consistent with the "burning plastic" descriptor used by Hyde Park residents. See: EPA, "Coke Oven Emissions — Hazard Summary," Technology Transfer Network Air Toxics; ATSDR, "Toxicological Profile for Coke Oven Emissions" (2017 update).
 
