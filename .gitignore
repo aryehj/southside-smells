@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# PII-containing analysis
+data/hyde_park_smell_reports_cleaned.csv
+
 # Distribution / packaging
 .Python
 build/
