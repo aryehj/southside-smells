@@ -563,20 +563,50 @@ def generate_html(reading, history):
 # ── Main ──
 
 def main():
+    print("Southside Smells Monitor")
+    print("=" * 40)
+
+    # Always fetch wind — Open-Meteo requires no API key.
+    print("Fetching weather from Open-Meteo...")
+    weather = fetch_weather()
+    wind_dir = weather["wind_dir"]
+    print(f"  Wind: {wind_dir}° {compass(wind_dir)} "
+          f"at {weather['wind_speed_kmh']:.0f} km/h")
+    print(f"  Temp: {weather['temperature_c']:.1f}°C")
+
+    now = datetime.now(timezone(timedelta(hours=-6)))  # Chicago / CST offset
+    is_se = 90 <= wind_dir <= 180
+
+    # ── Non-SE branch: update timestamp + wind display only ──────────────────
+    if not is_se:
+        history = load_history()
+        if history:
+            last = history[-1]
+            ghost = {
+                "timestamp":      now.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                "wind_dir":       weather["wind_dir"],
+                "wind_speed_kmh": weather["wind_speed_kmh"],
+                "temperature_c":  weather["temperature_c"],
+                "risk_score":     last["risk_score"],
+                "risk_level":     last["risk_level"],
+                "eta_minutes":    None,
+                "sensors":        last["sensors"],
+            }
+            generate_html(ghost, history)
+            print(f"\nNon-SE winds ({compass(wind_dir)}) — "
+                  "updated wind/timestamp only, skipped PurpleAir.")
+        else:
+            print(f"\nNon-SE winds ({compass(wind_dir)}) — "
+                  "no history yet, skipping HTML update.")
+        print(f"Status page: {HTML_PATH}")
+        print("Done.")
+        return
+
+    # ── SE branch: full pipeline ──────────────────────────────────────────────
     api_key = os.environ.get("PURPLEAIR_API_KEY", "")
     if not api_key:
         print("Set PURPLEAIR_API_KEY environment variable.")
         sys.exit(1)
-
-    print("Southside Smells Monitor")
-    print("=" * 40)
-
-    # Fetch data
-    print("Fetching weather from Open-Meteo...")
-    weather = fetch_weather()
-    print(f"  Wind: {weather['wind_dir']}° {compass(weather['wind_dir'])} "
-          f"at {weather['wind_speed_kmh']:.0f} km/h")
-    print(f"  Temp: {weather['temperature_c']:.1f}°C")
 
     print("Fetching PM2.5 from PurpleAir...")
     sensors = fetch_pm25(api_key)
@@ -593,7 +623,6 @@ def main():
         print(f"ETA:  ~{eta_minutes // 60}h {eta_minutes % 60}m")
 
     # Build reading
-    now = datetime.now(timezone(timedelta(hours=-6)))  # Chicago / CST offset
     reading = {
         "timestamp": now.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "wind_dir": weather["wind_dir"],
