@@ -551,7 +551,7 @@ def generate_html(reading, history):
 
   <h1>Southside Smells Monitor</h1>
   <p class="subtitle">Hyde Park air quality — industrial odor risk from the Calumet corridor</p>
-  <p class="last-updated">Last updated <time datetime="{timestamp_iso}">{timestamp_display}</time></p>
+  <p class="last-updated">Last updated <time datetime="{timestamp_iso}">{timestamp_display}</time> Chicago time</p>
 
   <div class="badge">{level} <span class="score">{reading["risk_score"]}/100</span></div>
 
