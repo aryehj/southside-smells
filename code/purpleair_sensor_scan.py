@@ -17,6 +17,7 @@ import sys
 import json
 import math
 import urllib.request
+from datetime import datetime, timezone
 
 API_KEY = os.environ.get("PURPLEAIR_API_KEY", "")
 if not API_KEY:
@@ -32,14 +33,15 @@ HP_LAT, HP_LON = 41.794, -87.590   # Hyde Park (smell report center)
 NW_LAT, NW_LON = 41.85, -87.70
 SE_LAT, SE_LON = 41.58, -87.30
 
+EARTH_RADIUS_MI = 3959  # mean radius of Earth in miles
+
 # ── Geometry helpers ──
 def haversine(lat1, lon1, lat2, lon2):
-    R = 3959  # miles
     dlat, dlon = math.radians(lat2 - lat1), math.radians(lon2 - lon1)
     a = (math.sin(dlat / 2) ** 2
          + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2))
          * math.sin(dlon / 2) ** 2)
-    return R * 2 * math.asin(math.sqrt(a))
+    return EARTH_RADIUS_MI * 2 * math.asin(math.sqrt(a))
 
 def bearing(lat1, lon1, lat2, lon2):
     dlon = math.radians(lon2 - lon1)
@@ -114,8 +116,6 @@ if not records:
 print(f"{'Index':>7s}  {'Name':<35s} {'Lat':>8s} {'Lon':>9s}  "
       f"{'Dist':>5s} {'Brg':>4s} {'Dir':>4s}  {'Last Seen':<12s}")
 print("-" * 105)
-
-from datetime import datetime, timezone
 
 for r in records:
     ls = r["last_seen"]
