@@ -288,5 +288,42 @@
         "dist_mi": 0.1
       }
     ]
+  },
+  {
+    "timestamp_iso": "2026-03-02T03:38:52-0600",
+    "timestamp_display": "2 March 2026 at 03:38 AM",
+    "wind_dir": 108,
+    "wind_speed_mph": 10.8,
+    "temperature_f": 29.4,
+    "risk_score": 13,
+    "risk_level": "Low",
+    "eta_minutes": 222,
+    "sensors": [
+      {
+        "name": "Progressive Community Church",
+        "pm25": 2.9,
+        "dist_mi": 19.1
+      },
+      {
+        "name": "Canalport",
+        "pm25": 0.9,
+        "dist_mi": 12.4
+      },
+      {
+        "name": "Bug",
+        "pm25": 9.7,
+        "dist_mi": 6.9
+      },
+      {
+        "name": "Rooster",
+        "pm25": 9.3,
+        "dist_mi": 5.4
+      },
+      {
+        "name": "Purple-HP-1",
+        "pm25": 3.6,
+        "dist_mi": 0.1
+      }
+    ]
   }
 ]
