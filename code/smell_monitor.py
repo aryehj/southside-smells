@@ -367,23 +367,56 @@ def wind_arrow_svg(degrees):
 def generate_html(reading, history):
     """Generate the static status page."""
     level = reading["risk_level"]
-    badge_color, bg_color = RISK_COLORS[level]
+    badge_color, _ = RISK_COLORS[level]
     wind_dir = reading["wind_dir"]
     wind_speed = reading["wind_speed_kmh"]
     temp = reading["temperature_c"]
     eta = reading.get("eta_minutes")
     timestamp = reading["timestamp"]
 
-    # ETA block
-    eta_html = ""
-    if eta and level in ("Moderate", "High", "Active Alert"):
+    # Wind alignment and compass label for explanatory text
+    wind_aligned = 90 <= wind_dir <= 200
+    compass_label = compass(wind_dir)
+
+    # ETA box — always rendered; active (green) when SE wind, inactive (grey) otherwise
+    if eta:
         hours = eta // 60
         mins = eta % 60
+        time_str = f"{hours}h {mins:02d}m" if hours else f"{mins}m"
         eta_html = (
-            f'<div class="eta-box">'
-            f'Estimated plume arrival in Hyde Park: '
-            f'<strong>~{hours}h {mins}m</strong>'
+            f'<div class="eta-box active">'
+            f'<div class="eta-label">Estimated time for Calumet emissions to reach Hyde Park</div>'
+            f'<div class="eta-value">~{time_str}</div>'
+            f'<div class="eta-note">Based on current wind speed ({wind_speed:.0f}&nbsp;km/h)'
+            f' and ~12&nbsp;mi to nearest corridor sources.</div>'
             f'</div>'
+        )
+    else:
+        eta_html = (
+            f'<div class="eta-box inactive">'
+            f'<div class="eta-label">Estimated time for Calumet emissions to reach Hyde Park</div>'
+            f'<div class="eta-value">N/A</div>'
+            f'<div class="eta-note">Wind is from the {compass_label} —'
+            f' industrial corridor emissions are not heading toward Hyde Park right now.</div>'
+            f'</div>'
+        )
+
+    # Wind card explanation — conditional on direction
+    if wind_aligned:
+        wind_explain = (
+            f'<p class="explain"><span class="warn">Wind is from the'
+            f' {compass_label} ({wind_dir:.0f}°) — carrying Calumet industrial'
+            f' emissions toward Hyde Park.</span> The corridor sits 10–18 miles'
+            f' to the southeast; southeasterly winds (roughly 90°–180°) are the'
+            f' key risk signal for neighborhood odors.</p>'
+        )
+    else:
+        wind_explain = (
+            f'<p class="explain"><span class="ok">Wind is currently from the'
+            f' {compass_label} ({wind_dir:.0f}°) — emissions are not heading'
+            f' toward Hyde Park right now.</span> The risk rises when wind shifts'
+            f' to southeasterly (roughly 90°–180°), carrying Calumet corridor'
+            f' emissions 10–18 miles northwest into the neighborhood.</p>'
         )
 
     # Sensor rows
@@ -429,8 +462,14 @@ def generate_html(reading, history):
   body {{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
          background:#f8fafc; color:#1e293b; line-height:1.5; padding:16px; }}
   .container {{ max-width:640px; margin:0 auto; }}
+  .experiment-banner {{ background:#fef9c3; border-left:4px solid #eab308;
+    border-radius:6px; padding:10px 14px; margin-bottom:18px;
+    font-size:13px; color:#713f12; line-height:1.5; }}
+  .experiment-banner strong {{ font-weight:600; }}
   h1 {{ font-size:22px; margin-bottom:2px; }}
-  .subtitle {{ color:#64748b; font-size:14px; margin-bottom:20px; }}
+  .subtitle {{ color:#64748b; font-size:14px; margin-bottom:6px; }}
+  .last-updated {{ font-size:12px; color:#94a3b8; margin-bottom:18px; }}
+  .last-updated time {{ font-weight:500; color:#64748b; }}
   .badge {{ display:inline-block; padding:12px 24px; border-radius:12px;
             font-size:28px; font-weight:700; color:#fff;
             background:{badge_color}; margin-bottom:16px; }}
@@ -438,12 +477,23 @@ def generate_html(reading, history):
   .card {{ background:#fff; border:1px solid #e2e8f0; border-radius:10px;
            padding:16px; margin-bottom:14px; }}
   .card h2 {{ font-size:15px; color:#64748b; margin-bottom:10px; }}
-  .wind-row {{ display:flex; align-items:center; gap:12px; }}
+  .wind-row {{ display:flex; align-items:center; gap:12px; margin-bottom:10px; }}
   .wind-detail {{ font-size:15px; }}
   .wind-detail strong {{ font-size:20px; }}
-  .eta-box {{ background:{bg_color}; border:2px solid {badge_color};
-              border-radius:10px; padding:12px 16px; margin-bottom:14px;
-              font-size:16px; text-align:center; }}
+  .explain {{ font-size:13px; color:#64748b; border-top:1px solid #f1f5f9;
+              padding-top:10px; line-height:1.6; }}
+  .explain.no-border {{ border-top:none; padding-top:0; margin-bottom:12px; }}
+  .explain .ok   {{ color:#15803d; font-weight:500; }}
+  .explain .warn {{ color:#b45309; font-weight:500; }}
+  .eta-box {{ border-radius:10px; padding:12px 16px; margin-bottom:14px; text-align:center; }}
+  .eta-box.active   {{ background:#f0fdf4; border:2px solid #22c55e; }}
+  .eta-box.inactive {{ background:#f8fafc; border:2px solid #cbd5e1; }}
+  .eta-label {{ font-size:11px; text-transform:uppercase; letter-spacing:0.07em;
+                color:#94a3b8; margin-bottom:4px; }}
+  .eta-value {{ font-size:24px; font-weight:700; }}
+  .eta-box.active   .eta-value {{ color:#15803d; }}
+  .eta-box.inactive .eta-value {{ color:#94a3b8; }}
+  .eta-note  {{ font-size:12px; color:#94a3b8; margin-top:5px; line-height:1.5; }}
   table {{ width:100%; border-collapse:collapse; font-size:14px; }}
   th {{ text-align:left; color:#64748b; font-weight:500; padding:6px 8px;
        border-bottom:1px solid #e2e8f0; }}
@@ -454,8 +504,15 @@ def generate_html(reading, history):
 </head>
 <body>
 <div class="container">
+  <div class="experiment-banner">
+    <strong>Prototype under active development.</strong>
+    Data may be incomplete, delayed, or inaccurate. This tool is a community
+    experiment — do not rely on it for health or safety decisions.
+  </div>
+
   <h1>Southside Smells Monitor</h1>
   <p class="subtitle">Hyde Park air quality — industrial odor risk from the Calumet corridor</p>
+  <p class="last-updated">Last updated <time datetime="{timestamp}">{timestamp}</time></p>
 
   <div class="badge">{level} <span class="score">{reading["risk_score"]}/100</span></div>
 
@@ -470,10 +527,18 @@ def generate_html(reading, history):
         {wind_speed:.0f} km/h &middot; {temp:.1f}°C
       </div>
     </div>
+    {wind_explain}
   </div>
 
   <div class="card">
     <h2>PM2.5 Sensor Readings (µg/m³)</h2>
+    <p class="explain no-border">These sensors form a chain between the Calumet industrial
+    corridor and Hyde Park. Fine particulate matter (PM2.5) is a
+    <span class="warn">proxy for industrial pollutants traveling through the air you are
+    breathing, or about to breathe</span> — elevated readings that appear first at distant
+    sensors and then at closer ones signal an arriving plume. US&nbsp;EPA considers levels
+    above 12&nbsp;µg/m³ unhealthy for sensitive groups; above 35&nbsp;µg/m³ unhealthy
+    for everyone.</p>
     <table>
       <tr><th>Sensor</th><th>Distance</th><th>PM2.5</th></tr>
       {sensor_rows}
@@ -483,7 +548,6 @@ def generate_html(reading, history):
   {sparkline_section}
 
   <div class="footer">
-    <p>Updated {timestamp}</p>
     <p>Data: <a href="https://open-meteo.com/">Open-Meteo</a> &middot;
        <a href="https://www.purpleair.com/">PurpleAir</a></p>
     <p><a href="https://github.com/aryehj/southside-smells">Full analysis &amp; methodology</a></p>

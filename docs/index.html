@@ -10,8 +10,14 @@
   body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
          background:#f8fafc; color:#1e293b; line-height:1.5; padding:16px; }
   .container { max-width:640px; margin:0 auto; }
+  .experiment-banner { background:#fef9c3; border-left:4px solid #eab308;
+    border-radius:6px; padding:10px 14px; margin-bottom:18px;
+    font-size:13px; color:#713f12; line-height:1.5; }
+  .experiment-banner strong { font-weight:600; }
   h1 { font-size:22px; margin-bottom:2px; }
-  .subtitle { color:#64748b; font-size:14px; margin-bottom:20px; }
+  .subtitle { color:#64748b; font-size:14px; margin-bottom:6px; }
+  .last-updated { font-size:12px; color:#94a3b8; margin-bottom:18px; }
+  .last-updated time { font-weight:500; color:#64748b; }
   .badge { display:inline-block; padding:12px 24px; border-radius:12px;
             font-size:28px; font-weight:700; color:#fff;
             background:#22c55e; margin-bottom:16px; }
@@ -19,12 +25,23 @@
   .card { background:#fff; border:1px solid #e2e8f0; border-radius:10px;
            padding:16px; margin-bottom:14px; }
   .card h2 { font-size:15px; color:#64748b; margin-bottom:10px; }
-  .wind-row { display:flex; align-items:center; gap:12px; }
+  .wind-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
   .wind-detail { font-size:15px; }
   .wind-detail strong { font-size:20px; }
-  .eta-box { background:#f0fdf4; border:2px solid #22c55e;
-              border-radius:10px; padding:12px 16px; margin-bottom:14px;
-              font-size:16px; text-align:center; }
+  .explain { font-size:13px; color:#64748b; border-top:1px solid #f1f5f9;
+              padding-top:10px; line-height:1.6; }
+  .explain.no-border { border-top:none; padding-top:0; margin-bottom:12px; }
+  .explain .ok   { color:#15803d; font-weight:500; }
+  .explain .warn { color:#b45309; font-weight:500; }
+  .eta-box { border-radius:10px; padding:12px 16px; margin-bottom:14px; text-align:center; }
+  .eta-box.active   { background:#f0fdf4; border:2px solid #22c55e; }
+  .eta-box.inactive { background:#f8fafc; border:2px solid #cbd5e1; }
+  .eta-label { font-size:11px; text-transform:uppercase; letter-spacing:0.07em;
+                color:#94a3b8; margin-bottom:4px; }
+  .eta-value { font-size:24px; font-weight:700; }
+  .eta-box.active   .eta-value { color:#15803d; }
+  .eta-box.inactive .eta-value { color:#94a3b8; }
+  .eta-note  { font-size:12px; color:#94a3b8; margin-top:5px; line-height:1.5; }
   table { width:100%; border-collapse:collapse; font-size:14px; }
   th { text-align:left; color:#64748b; font-weight:500; padding:6px 8px;
        border-bottom:1px solid #e2e8f0; }
@@ -35,36 +52,50 @@
 </head>
 <body>
 <div class="container">
+  <div class="experiment-banner">
+    <strong>Prototype under active development.</strong>
+    Data may be incomplete, delayed, or inaccurate. This tool is a community
+    experiment — do not rely on it for health or safety decisions.
+  </div>
+
   <h1>Southside Smells Monitor</h1>
   <p class="subtitle">Hyde Park air quality — industrial odor risk from the Calumet corridor</p>
+  <p class="last-updated">Last updated <time datetime="2026-03-01T17:52:19-0600">2026-03-01T17:52:19-0600</time></p>
 
   <div class="badge">Low <span class="score">0/100</span></div>
 
-  
+  <div class="eta-box inactive"><div class="eta-label">Estimated time for Calumet emissions to reach Hyde Park</div><div class="eta-value">N/A</div><div class="eta-note">Wind is from the NE — industrial corridor emissions are not heading toward Hyde Park right now.</div></div>
 
   <div class="card">
     <h2>Current Wind</h2>
     <div class="wind-row">
-      <svg viewBox="0 0 40 40" style="width:40px;height:40px"><g transform="rotate(218,20,20)"><line x1="20" y1="34" x2="20" y2="6" stroke="#1e293b" stroke-width="2.5"/><polyline points="12,14 20,6 28,14" fill="none" stroke="#1e293b" stroke-width="2.5" stroke-linejoin="round"/></g></svg>
+      <svg viewBox="0 0 40 40" style="width:40px;height:40px"><g transform="rotate(221,20,20)"><line x1="20" y1="34" x2="20" y2="6" stroke="#1e293b" stroke-width="2.5"/><polyline points="12,14 20,6 28,14" fill="none" stroke="#1e293b" stroke-width="2.5" stroke-linejoin="round"/></g></svg>
       <div class="wind-detail">
-        <strong>38° NE</strong><br>
-        20 km/h &middot; -1.7°C
+        <strong>41° NE</strong><br>
+        22 km/h &middot; -1.4°C
       </div>
     </div>
+    <p class="explain"><span class="ok">Wind is currently from the NE (41°) — emissions are not heading toward Hyde Park right now.</span> The risk rises when wind shifts to southeasterly (roughly 90°–180°), carrying Calumet corridor emissions 10–18 miles northwest into the neighborhood.</p>
   </div>
 
   <div class="card">
     <h2>PM2.5 Sensor Readings (µg/m³)</h2>
+    <p class="explain no-border">These sensors form a chain between the Calumet industrial
+    corridor and Hyde Park. Fine particulate matter (PM2.5) is a
+    <span class="warn">proxy for industrial pollutants traveling through the air you are
+    breathing, or about to breathe</span> — elevated readings that appear first at distant
+    sensors and then at closer ones signal an arriving plume. US&nbsp;EPA considers levels
+    above 12&nbsp;µg/m³ unhealthy for sensitive groups; above 35&nbsp;µg/m³ unhealthy
+    for everyone.</p>
     <table>
       <tr><th>Sensor</th><th>Distance</th><th>PM2.5</th></tr>
-      <tr><td>Progressive Community Church</td><td>19.1 mi</td><td style="color:#22c55e;font-weight:600">0.8</td></tr><tr><td>Canalport</td><td>12.4 mi</td><td style="color:#22c55e;font-weight:600">0.9</td></tr><tr><td>Bug</td><td>6.9 mi</td><td style="color:#22c55e;font-weight:600">0.5</td></tr><tr><td>Rooster</td><td>5.4 mi</td><td style="color:#22c55e;font-weight:600">0.2</td></tr><tr><td>Purple-HP-1</td><td>0.1 mi</td><td style="color:#22c55e;font-weight:600">0.2</td></tr>
+      <tr><td>Progressive Community Church</td><td>19.1 mi</td><td style="color:#22c55e;font-weight:600">1.3</td></tr><tr><td>Canalport</td><td>12.4 mi</td><td style="color:#22c55e;font-weight:600">0.9</td></tr><tr><td>Bug</td><td>6.9 mi</td><td style="color:#22c55e;font-weight:600">0.6</td></tr><tr><td>Rooster</td><td>5.4 mi</td><td style="color:#22c55e;font-weight:600">0.2</td></tr><tr><td>Purple-HP-1</td><td>0.1 mi</td><td style="color:#22c55e;font-weight:600">0.4</td></tr>
     </table>
   </div>
 
-  <div class="card"><h2>Risk Score — Last 3 Hours</h2><svg viewBox="0 0 600 80" style="width:100%;max-width:600px;height:80px"><polyline points="0.0,75.0 300.0,75.0 600.0,75.0" fill="none" stroke="#22c55e" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="600.0" cy="75.0" r="4" fill="#22c55e"/></svg><div style="display:flex;justify-content:space-between;font-size:12px;color:#6b7280;margin-top:4px"><span>2026-03-01T13:30</span><span>2026-03-01T17:19</span></div></div>
+  <div class="card"><h2>Risk Score — Last 4 Hours</h2><svg viewBox="0 0 600 80" style="width:100%;max-width:600px;height:80px"><polyline points="0.0,75.0 200.0,75.0 400.0,75.0 600.0,75.0" fill="none" stroke="#22c55e" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="600.0" cy="75.0" r="4" fill="#22c55e"/></svg><div style="display:flex;justify-content:space-between;font-size:12px;color:#6b7280;margin-top:4px"><span>2026-03-01T13:30</span><span>2026-03-01T17:52</span></div></div>
 
   <div class="footer">
-    <p>Updated 2026-03-01T17:19:39-0600</p>
     <p>Data: <a href="https://open-meteo.com/">Open-Meteo</a> &middot;
        <a href="https://www.purpleair.com/">PurpleAir</a></p>
     <p><a href="https://github.com/aryehj/southside-smells">Full analysis &amp; methodology</a></p>
