@@ -584,7 +584,7 @@ def main():
     print(f"  Temp: {weather['temperature_f']:.1f}°F")
 
     now = datetime.now(timezone(timedelta(hours=-6)))  # Chicago / CST offset
-    is_se = 90 <= wind_dir <= 180
+    is_se = 90 <= wind_dir <= 200
 
     # ── Non-SE branch: update timestamp + wind display only ──────────────────
     if not is_se:
