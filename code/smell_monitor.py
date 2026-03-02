@@ -433,9 +433,30 @@ def generate_html(reading, history):
             f'</tr>'
         )
 
+    # PM2.5 card — only shown when wind is southeasterly
+    if wind_aligned:
+        pm25_card_html = (
+            f'<div class="card">'
+            f'<h2>PM2.5 Sensor Readings (µg/m³)</h2>'
+            f'<p class="explain no-border">These sensors form a chain between the Calumet industrial\n'
+            f'    corridor and Hyde Park. Fine particulate matter (PM2.5) is a\n'
+            f'    <span class="warn">proxy for industrial pollutants traveling through the air you are\n'
+            f'    breathing, or about to breathe</span> — elevated readings that appear first at distant\n'
+            f'    sensors and then at closer ones signal an arriving plume. US&nbsp;EPA considers levels\n'
+            f'    above 12&nbsp;µg/m³ unhealthy for sensitive groups; above 35&nbsp;µg/m³ unhealthy\n'
+            f'    for everyone.</p>'
+            f'<table>'
+            f'<tr><th>Sensor</th><th>Distance</th><th>PM2.5</th></tr>'
+            f'{sensor_rows}'
+            f'</table>'
+            f'</div>'
+        )
+    else:
+        pm25_card_html = ""
+
     sparkline = sparkline_svg(history)
     sparkline_section = ""
-    if sparkline:
+    if sparkline and wind_aligned:
         # Time labels for sparkline
         if len(history) >= 2:
             oldest = history[0].get("timestamp", "")[:16]
@@ -530,20 +551,7 @@ def generate_html(reading, history):
     {wind_explain}
   </div>
 
-  <div class="card">
-    <h2>PM2.5 Sensor Readings (µg/m³)</h2>
-    <p class="explain no-border">These sensors form a chain between the Calumet industrial
-    corridor and Hyde Park. Fine particulate matter (PM2.5) is a
-    <span class="warn">proxy for industrial pollutants traveling through the air you are
-    breathing, or about to breathe</span> — elevated readings that appear first at distant
-    sensors and then at closer ones signal an arriving plume. US&nbsp;EPA considers levels
-    above 12&nbsp;µg/m³ unhealthy for sensitive groups; above 35&nbsp;µg/m³ unhealthy
-    for everyone.</p>
-    <table>
-      <tr><th>Sensor</th><th>Distance</th><th>PM2.5</th></tr>
-      {sensor_rows}
-    </table>
-  </div>
+  {pm25_card_html}
 
   {sparkline_section}
 

@@ -178,5 +178,41 @@
         "dist_mi": 0.1
       }
     ]
+  },
+  {
+    "timestamp": "2026-03-01T19:29:01-0600",
+    "wind_dir": 52,
+    "wind_speed_kmh": 18.2,
+    "temperature_c": -1.3,
+    "risk_score": 0,
+    "risk_level": "Low",
+    "eta_minutes": null,
+    "sensors": [
+      {
+        "name": "Progressive Community Church",
+        "pm25": 0.5,
+        "dist_mi": 19.1
+      },
+      {
+        "name": "Canalport",
+        "pm25": 0.9,
+        "dist_mi": 12.4
+      },
+      {
+        "name": "Bug",
+        "pm25": 1.2,
+        "dist_mi": 6.9
+      },
+      {
+        "name": "Rooster",
+        "pm25": 0.5,
+        "dist_mi": 5.4
+      },
+      {
+        "name": "Purple-HP-1",
+        "pm25": 0.7,
+        "dist_mi": 0.1
+      }
+    ]
   }
 ]
