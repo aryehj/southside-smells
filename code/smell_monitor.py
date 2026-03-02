@@ -72,6 +72,7 @@ def fetch_weather():
         "https://api.open-meteo.com/v1/forecast"
         "?latitude=41.794&longitude=-87.59"
         "&current=wind_direction_10m,wind_speed_10m,temperature_2m"
+        "&wind_speed_unit=mph&temperature_unit=fahrenheit"
         "&timezone=America/Chicago"
     )
     resp = requests.get(url, timeout=30)
@@ -79,8 +80,8 @@ def fetch_weather():
     current = resp.json()["current"]
     return {
         "wind_dir": current["wind_direction_10m"],
-        "wind_speed_kmh": current["wind_speed_10m"],
-        "temperature_c": current["temperature_2m"],
+        "wind_speed_mph": current["wind_speed_10m"],
+        "temperature_f": current["temperature_2m"],
     }
 
 
@@ -122,7 +123,7 @@ def fetch_pm25(api_key):
 
 # ── Risk scoring ──
 
-def compute_risk(wind_dir, wind_speed_kmh, sensor_readings):
+def compute_risk(wind_dir, wind_speed_mph, sensor_readings):
     """
     Compute smell risk score (0-100) based on wind direction, speed, and PM2.5.
 
@@ -146,8 +147,8 @@ def compute_risk(wind_dir, wind_speed_kmh, sensor_readings):
         wind_aligned = True
         angular_dist = abs(wind_dir - SOURCE_BEARING_CENTER)
         wind_points = max(0, 60 - angular_dist * (60 / 45))
-        # Calm winds (<3 km/h) barely transport anything
-        if wind_speed_kmh < 3:
+        # Calm winds (<2 mph) barely transport anything
+        if wind_speed_mph < 2:
             wind_points *= 0.3
 
     # -- PM2.5 at source --
@@ -193,8 +194,8 @@ def compute_risk(wind_dir, wind_speed_kmh, sensor_readings):
 
     # ETA: plume transport speed is roughly 30% of surface wind speed
     eta_minutes = None
-    if wind_aligned and wind_speed_kmh > 3:
-        transport_mph = wind_speed_kmh * 0.621371 * 0.3
+    if wind_aligned and wind_speed_mph > 2:
+        transport_mph = wind_speed_mph * 0.3
         if transport_mph > 0:
             eta_minutes = int(12 / transport_mph * 60)  # 12 miles from source
 
@@ -246,8 +247,8 @@ def send_alert_email(reading):
     subject = f"Southside Smells: {level} (score {score})"
     body_lines = [
         f"Risk level: {level} (score {score}/100)",
-        f"Wind: {wind}° ({compass(wind)}) at {reading['wind_speed_kmh']:.0f} km/h",
-        f"Temperature: {reading['temperature_c']:.1f}°C",
+        f"Wind: {wind}° ({compass(wind)}) at {reading['wind_speed_mph']:.0f} mph",
+        f"Temperature: {reading['temperature_f']:.1f}°F",
         "",
     ]
     if eta:
@@ -369,8 +370,8 @@ def generate_html(reading, history):
     level = reading["risk_level"]
     badge_color, _ = RISK_COLORS[level]
     wind_dir = reading["wind_dir"]
-    wind_speed = reading["wind_speed_kmh"]
-    temp = reading["temperature_c"]
+    wind_speed = reading["wind_speed_mph"]
+    temp = reading["temperature_f"]
     eta = reading.get("eta_minutes")
     timestamp = reading["timestamp"]
 
@@ -387,7 +388,7 @@ def generate_html(reading, history):
             f'<div class="eta-box active">'
             f'<div class="eta-label">Estimated time for Calumet emissions to reach Hyde Park</div>'
             f'<div class="eta-value">~{time_str}</div>'
-            f'<div class="eta-note">Based on current wind speed ({wind_speed:.0f}&nbsp;km/h)'
+            f'<div class="eta-note">Based on current wind speed ({wind_speed:.0f}&nbsp;mph)'
             f' and ~12&nbsp;mi to nearest corridor sources.</div>'
             f'</div>'
         )
@@ -545,7 +546,7 @@ def generate_html(reading, history):
       {wind_arrow_svg(wind_dir)}
       <div class="wind-detail">
         <strong>{wind_dir}° {compass(wind_dir)}</strong><br>
-        {wind_speed:.0f} km/h &middot; {temp:.1f}°C
+        {wind_speed:.0f} mph &middot; {temp:.1f}°F
       </div>
     </div>
     {wind_explain}
@@ -579,8 +580,8 @@ def main():
     weather = fetch_weather()
     wind_dir = weather["wind_dir"]
     print(f"  Wind: {wind_dir}° {compass(wind_dir)} "
-          f"at {weather['wind_speed_kmh']:.0f} km/h")
-    print(f"  Temp: {weather['temperature_c']:.1f}°C")
+          f"at {weather['wind_speed_mph']:.0f} mph")
+    print(f"  Temp: {weather['temperature_f']:.1f}°F")
 
     now = datetime.now(timezone(timedelta(hours=-6)))  # Chicago / CST offset
     is_se = 90 <= wind_dir <= 180
@@ -593,8 +594,8 @@ def main():
             ghost = {
                 "timestamp":      now.strftime("%Y-%m-%dT%H:%M:%S%z"),
                 "wind_dir":       weather["wind_dir"],
-                "wind_speed_kmh": weather["wind_speed_kmh"],
-                "temperature_c":  weather["temperature_c"],
+                "wind_speed_mph": weather["wind_speed_mph"],
+                "temperature_f":  weather["temperature_f"],
                 "risk_score":     last["risk_score"],
                 "risk_level":     last["risk_level"],
                 "eta_minutes":    None,
@@ -624,7 +625,7 @@ def main():
 
     # Score
     risk_score, risk_level, eta_minutes = compute_risk(
-        weather["wind_dir"], weather["wind_speed_kmh"], sensors
+        weather["wind_dir"], weather["wind_speed_mph"], sensors
     )
     print(f"\nRisk: {risk_level} ({risk_score}/100)")
     if eta_minutes:
@@ -634,8 +635,8 @@ def main():
     reading = {
         "timestamp": now.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "wind_dir": weather["wind_dir"],
-        "wind_speed_kmh": weather["wind_speed_kmh"],
-        "temperature_c": weather["temperature_c"],
+        "wind_speed_mph": weather["wind_speed_mph"],
+        "temperature_f": weather["temperature_f"],
         "risk_score": risk_score,
         "risk_level": risk_level,
         "eta_minutes": eta_minutes,
