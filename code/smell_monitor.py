@@ -150,53 +150,6 @@ def fetch_pm25(api_key):
 
 # ── Risk scoring ──
 
-def _wind_score(wind_dir, wind_speed_mph):
-    """Wind direction component: 0–60 points.
-
-    Returns (points, wind_aligned). wind_aligned is True when wind is blowing
-    from the SE arc (SE_WIND_MIN–SE_WIND_MAX degrees), which is the direction
-    that carries Calumet industrial corridor emissions toward Hyde Park.
-    """
-    if not (SE_WIND_MIN <= wind_dir <= SE_WIND_MAX):
-        return 0.0, False
-    # Score peaks at SOURCE_BEARING_CENTER and falls off 60 pts over 45 degrees
-    angular_dist = abs(wind_dir - SOURCE_BEARING_CENTER)
-    points = max(0, 60 - angular_dist * (60 / 45))
-    # Calm winds barely transport anything
-    if wind_speed_mph < CALM_WIND_MPH:
-        points *= CALM_WIND_PENALTY
-    return points, True
-
-
-def _pm25_score(wind_aligned, source_pm25):
-    """PM2.5 at-source component: 0–30 points (only when wind is from SE)."""
-    if not wind_aligned:
-        return 0
-    if source_pm25 >= PM25_HIGH:
-        return 30
-    if source_pm25 >= PM25_MOD:
-        return 20
-    if source_pm25 >= PM25_LOW:
-        return 10
-    return 0
-
-
-def _gradient_score(wind_aligned, source_pm25, local_pm25):
-    """Source-to-local PM2.5 gradient component: 0–10 points.
-
-    A high source/observer ratio confirms the plume is propagating toward
-    Hyde Park, rather than being uniformly elevated everywhere.
-    """
-    if not wind_aligned or source_pm25 <= 0:
-        return 0
-    ratio = source_pm25 / max(local_pm25, 1)
-    if ratio > GRADIENT_STRONG:
-        return 10
-    if ratio > GRADIENT_WEAK:
-        return 5
-    return 0
-
-
 def compute_risk(wind_dir, wind_speed_mph, sensor_readings):
     """
     Compute smell risk score (0-100) based on wind direction, speed, and PM2.5.
@@ -219,14 +172,39 @@ def compute_risk(wind_dir, wind_speed_mph, sensor_readings):
     local_vals = [s["pm25"] for s in sensor_readings[-1:] if s["pm25"] is not None]
     local_pm25 = local_vals[0] if local_vals else 0
 
-    wind_points, wind_aligned = _wind_score(wind_dir, wind_speed_mph)
+    # -- Wind direction component (0-60 points) --
+    wind_aligned = SE_WIND_MIN <= wind_dir <= SE_WIND_MAX
+    wind_points = 0.0
+    if wind_aligned:
+        # Score peaks at SOURCE_BEARING_CENTER and falls off 60 pts over 45 degrees
+        angular_dist = abs(wind_dir - SOURCE_BEARING_CENTER)
+        wind_points = max(0, 60 - angular_dist * (60 / 45))
+        # Calm winds barely transport anything
+        if wind_speed_mph < CALM_WIND_MPH:
+            wind_points *= CALM_WIND_PENALTY
 
     # Cap wind points if air is clean — SE wind alone is only a "watch"
     if source_pm25 < PM25_LOW:
         wind_points = min(wind_points, 30)
 
-    pm25_points     = _pm25_score(wind_aligned, source_pm25)
-    gradient_points = _gradient_score(wind_aligned, source_pm25, local_pm25)
+    # -- PM2.5 at source (0-30 points, only when wind is aligned) --
+    pm25_points = 0
+    if wind_aligned:
+        if source_pm25 >= PM25_HIGH:
+            pm25_points = 30
+        elif source_pm25 >= PM25_MOD:
+            pm25_points = 20
+        elif source_pm25 >= PM25_LOW:
+            pm25_points = 10
+
+    # -- Source-to-local gradient (0-10 points, only when wind is aligned) --
+    gradient_points = 0
+    if wind_aligned and source_pm25 > 0:
+        ratio = source_pm25 / max(local_pm25, 1)
+        if ratio > GRADIENT_STRONG:
+            gradient_points = 10
+        elif ratio > GRADIENT_WEAK:
+            gradient_points = 5
 
     risk_score = int(wind_points + pm25_points + gradient_points)
 
@@ -455,7 +433,8 @@ def generate_html(reading, history):
             f'<div class="eta-box inactive">'
             f'<div class="eta-label">Estimated travel time from the Calumet corridor</div>'
             f'<div class="eta-value">N/A</div>'
-            f'<div class="eta-note">Applies only when wind is from the SE (roughly 90°–180°).</div>'
+            f'<div class="eta-note">Wind is from the {compass_label} —'
+            f' industrial corridor emissions are not heading toward Hyde Park right now.</div>'
             f'</div>'
         )
 
