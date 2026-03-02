@@ -29,6 +29,11 @@ from email.mime.text import MIMEText
 from pathlib import Path
 
 try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    ZoneInfo = None
+
+try:
     import requests
 except ImportError:
     sys.exit("Missing dependency: pip install requests")
@@ -278,6 +283,17 @@ def send_alert_email(reading):
         print(f"  Email send failed: {e}")
 
 
+# ── Timestamp formatting ──
+
+def format_timestamp_display(dt):
+    """Format datetime for display in Chicago time.
+
+    Format: "day number" "month name" YYYY at HH:MM AM/PM
+    Example: "1 March 2026 at 08:40 PM"
+    """
+    return dt.strftime("%-d %B %Y at %I:%M %p")
+
+
 # ── HTML generation ──
 
 RISK_COLORS = {
@@ -373,7 +389,8 @@ def generate_html(reading, history):
     wind_speed = reading["wind_speed_mph"]
     temp = reading["temperature_f"]
     eta = reading.get("eta_minutes")
-    timestamp = reading["timestamp"]
+    timestamp_iso = reading.get("timestamp_iso", reading.get("timestamp", ""))
+    timestamp_display = reading.get("timestamp_display", "")
 
     # Wind alignment and compass label for explanatory text
     wind_aligned = 90 <= wind_dir <= 200
@@ -534,7 +551,7 @@ def generate_html(reading, history):
 
   <h1>Southside Smells Monitor</h1>
   <p class="subtitle">Hyde Park air quality — industrial odor risk from the Calumet corridor</p>
-  <p class="last-updated">Last updated <time datetime="{timestamp}">{timestamp}</time></p>
+  <p class="last-updated">Last updated <time datetime="{timestamp_iso}">{timestamp_display}</time></p>
 
   <div class="badge">{level} <span class="score">{reading["risk_score"]}/100</span></div>
 
@@ -583,7 +600,13 @@ def main():
           f"at {weather['wind_speed_mph']:.0f} mph")
     print(f"  Temp: {weather['temperature_f']:.1f}°F")
 
-    now = datetime.now(timezone(timedelta(hours=-6)))  # Chicago / CST offset
+    # Create Chicago timezone-aware datetime
+    if ZoneInfo:
+        now = datetime.now(ZoneInfo("America/Chicago"))
+    else:
+        # Fallback for Python < 3.9 without zoneinfo
+        # Note: This uses a fixed offset and does NOT handle DST correctly
+        now = datetime.now(timezone(timedelta(hours=-6)))
     is_se = 90 <= wind_dir <= 200
 
     # ── Non-SE branch: update timestamp + wind display only ──────────────────
@@ -592,7 +615,8 @@ def main():
         if history:
             last = history[-1]
             ghost = {
-                "timestamp":      now.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                "timestamp_iso":  now.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                "timestamp_display": format_timestamp_display(now),
                 "wind_dir":       weather["wind_dir"],
                 "wind_speed_mph": weather["wind_speed_mph"],
                 "temperature_f":  weather["temperature_f"],
@@ -633,7 +657,8 @@ def main():
 
     # Build reading
     reading = {
-        "timestamp": now.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "timestamp_iso": now.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "timestamp_display": format_timestamp_display(now),
         "wind_dir": weather["wind_dir"],
         "wind_speed_mph": weather["wind_speed_mph"],
         "temperature_f": weather["temperature_f"],
