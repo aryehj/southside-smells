@@ -60,6 +60,28 @@ SENSORS = [
 SENSOR_IDS = [s[0] for s in SENSORS]
 SOURCE_BEARING_CENTER = 143  # degrees — center of facility bearings (131-156)
 
+# ── SE wind zone (the risk window) ──
+# 62% of smell reports occurred when wind came from this arc.
+SE_WIND_MIN = 90   # degrees — eastern edge of SE arc
+SE_WIND_MAX = 200  # degrees — southern edge of SE arc (broadened to capture SSE)
+
+# ── Risk scoring thresholds ──
+CALM_WIND_MPH          = 2     # below this, wind barely transports anything
+CALM_WIND_PENALTY      = 0.3   # wind-score multiplier when conditions are calm
+PLUME_TRANSPORT_FACTOR = 0.3   # plume travels at ~30% of surface wind speed
+SOURCE_DIST_MI         = 12    # approximate miles from nearest source to Hyde Park
+
+PM25_HIGH = 35   # µg/m³ — EPA 24-hr standard; clearly elevated
+PM25_MOD  = 20   # µg/m³ — intermediate threshold
+PM25_LOW  = 10   # µg/m³ — lower threshold; above this, air is not clean
+
+GRADIENT_STRONG = 2.0   # source/observer PM2.5 ratio → strong plume signature
+GRADIENT_WEAK   = 1.5   # source/observer PM2.5 ratio → weak plume signature
+
+SCORE_ALERT    = 70   # risk score → Active Alert
+SCORE_HIGH     = 45   # risk score → High
+SCORE_MODERATE = 25   # risk score → Moderate
+
 
 # ── Geometry helpers (consistent with purpleair_sensor_scan.py) ──
 
@@ -128,6 +150,53 @@ def fetch_pm25(api_key):
 
 # ── Risk scoring ──
 
+def _wind_score(wind_dir, wind_speed_mph):
+    """Wind direction component: 0–60 points.
+
+    Returns (points, wind_aligned). wind_aligned is True when wind is blowing
+    from the SE arc (SE_WIND_MIN–SE_WIND_MAX degrees), which is the direction
+    that carries Calumet industrial corridor emissions toward Hyde Park.
+    """
+    if not (SE_WIND_MIN <= wind_dir <= SE_WIND_MAX):
+        return 0.0, False
+    # Score peaks at SOURCE_BEARING_CENTER and falls off 60 pts over 45 degrees
+    angular_dist = abs(wind_dir - SOURCE_BEARING_CENTER)
+    points = max(0, 60 - angular_dist * (60 / 45))
+    # Calm winds barely transport anything
+    if wind_speed_mph < CALM_WIND_MPH:
+        points *= CALM_WIND_PENALTY
+    return points, True
+
+
+def _pm25_score(wind_aligned, source_pm25):
+    """PM2.5 at-source component: 0–30 points (only when wind is from SE)."""
+    if not wind_aligned:
+        return 0
+    if source_pm25 >= PM25_HIGH:
+        return 30
+    if source_pm25 >= PM25_MOD:
+        return 20
+    if source_pm25 >= PM25_LOW:
+        return 10
+    return 0
+
+
+def _gradient_score(wind_aligned, source_pm25, local_pm25):
+    """Source-to-local PM2.5 gradient component: 0–10 points.
+
+    A high source/observer ratio confirms the plume is propagating toward
+    Hyde Park, rather than being uniformly elevated everywhere.
+    """
+    if not wind_aligned or source_pm25 <= 0:
+        return 0
+    ratio = source_pm25 / max(local_pm25, 1)
+    if ratio > GRADIENT_STRONG:
+        return 10
+    if ratio > GRADIENT_WEAK:
+        return 5
+    return 0
+
+
 def compute_risk(wind_dir, wind_speed_mph, sensor_readings):
     """
     Compute smell risk score (0-100) based on wind direction, speed, and PM2.5.
@@ -143,66 +212,38 @@ def compute_risk(wind_dir, wind_speed_mph, sensor_readings):
       - PM2.5 at source: 0-30 pts (only counted when wind is from SE)
       - Source-to-local gradient: 0-10 pts (only counted when wind is from SE)
     """
-    # -- Wind direction component (0-60 points) --
-    # 62% of smell reports occurred during SE winds (90-180 degrees).
-    # Sweet spot is ~143 degrees (center of facility bearings 131-156).
-    wind_aligned = False
-    wind_points = 0.0
-    if 90 <= wind_dir <= 200:
-        wind_aligned = True
-        angular_dist = abs(wind_dir - SOURCE_BEARING_CENTER)
-        wind_points = max(0, 60 - angular_dist * (60 / 45))
-        # Calm winds (<2 mph) barely transport anything
-        if wind_speed_mph < 2:
-            wind_points *= 0.3
-
-    # -- PM2.5 at source --
+    # SENSORS is ordered source-to-observer; first 2 are near-source, last is Hyde Park
     source_vals = [s["pm25"] for s in sensor_readings[:2] if s["pm25"] is not None]
     source_pm25 = max(source_vals) if source_vals else 0
 
     local_vals = [s["pm25"] for s in sensor_readings[-1:] if s["pm25"] is not None]
     local_pm25 = local_vals[0] if local_vals else 0
 
+    wind_points, wind_aligned = _wind_score(wind_dir, wind_speed_mph)
+
     # Cap wind points if air is clean — SE wind alone is only a "watch"
-    if source_pm25 < 10:
+    if source_pm25 < PM25_LOW:
         wind_points = min(wind_points, 30)
 
-    # -- PM2.5 component (0-30 points, only when wind is aligned) --
-    pm25_points = 0
-    if wind_aligned:
-        if source_pm25 >= 35:
-            pm25_points = 30
-        elif source_pm25 >= 20:
-            pm25_points = 20
-        elif source_pm25 >= 10:
-            pm25_points = 10
-
-    # -- Gradient component (0-10 points, only when wind is aligned) --
-    gradient_points = 0
-    if wind_aligned and source_pm25 > 0:
-        ratio = source_pm25 / max(local_pm25, 1)
-        if ratio > 2.0:
-            gradient_points = 10
-        elif ratio > 1.5:
-            gradient_points = 5
+    pm25_points     = _pm25_score(wind_aligned, source_pm25)
+    gradient_points = _gradient_score(wind_aligned, source_pm25, local_pm25)
 
     risk_score = int(wind_points + pm25_points + gradient_points)
 
-    if risk_score >= 70:
+    if risk_score >= SCORE_ALERT:
         level = "Active Alert"
-    elif risk_score >= 45:
+    elif risk_score >= SCORE_HIGH:
         level = "High"
-    elif risk_score >= 25:
+    elif risk_score >= SCORE_MODERATE:
         level = "Moderate"
     else:
         level = "Low"
 
     # ETA: plume transport speed is roughly 30% of surface wind speed
     eta_minutes = None
-    if wind_aligned and wind_speed_mph > 2:
-        transport_mph = wind_speed_mph * 0.3
-        if transport_mph > 0:
-            eta_minutes = int(12 / transport_mph * 60)  # 12 miles from source
+    if wind_aligned and wind_speed_mph > CALM_WIND_MPH:
+        transport_mph = wind_speed_mph * PLUME_TRANSPORT_FACTOR
+        eta_minutes = int(SOURCE_DIST_MI / transport_mph * 60)
 
     return risk_score, level, eta_minutes
 
@@ -393,7 +434,7 @@ def generate_html(reading, history):
     timestamp_display = reading.get("timestamp_display", "")
 
     # Wind alignment and compass label for explanatory text
-    wind_aligned = 90 <= wind_dir <= 200
+    wind_aligned = SE_WIND_MIN <= wind_dir <= SE_WIND_MAX
     compass_label = compass(wind_dir)
 
     # ETA box — always rendered; active (green) when SE wind, inactive (grey) otherwise
@@ -607,7 +648,7 @@ def main():
         # Fallback for Python < 3.9 without zoneinfo
         # Note: This uses a fixed offset and does NOT handle DST correctly
         now = datetime.now(timezone(timedelta(hours=-6)))
-    is_se = 90 <= wind_dir <= 200
+    is_se = SE_WIND_MIN <= wind_dir <= SE_WIND_MAX
 
     # ── Non-SE branch: update timestamp + wind display only ──────────────────
     if not is_se:
