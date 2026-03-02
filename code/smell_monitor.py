@@ -651,6 +651,11 @@ def main():
             print(f"\nNon-SE winds ({compass(wind_dir)}) — "
                   "no history yet, skipping HTML update.")
         print(f"Status page: {HTML_PATH}")
+        # Signal non-SE wind to GitHub Actions
+        github_output = os.environ.get("GITHUB_OUTPUT")
+        if github_output:
+            with open(github_output, "a") as f:
+                f.write("se_wind=false\n")
         print("Done.")
         return
 
@@ -700,6 +705,16 @@ def main():
     # Generate status page
     generate_html(reading, history)
     print(f"\nStatus page: {HTML_PATH}")
+
+    # Signal SE wind details to GitHub Actions
+    github_output = os.environ.get("GITHUB_OUTPUT")
+    if github_output:
+        with open(github_output, "a") as f:
+            f.write("se_wind=true\n")
+            f.write(f"wind_dir={weather['wind_dir']}\n")
+            f.write(f"wind_speed={weather['wind_speed_mph']:.0f}\n")
+            f.write(f"risk_level={risk_level}\n")
+            f.write(f"risk_score={risk_score}\n")
 
     # Email alert on transition to High or Active Alert
     alert_levels = {"High", "Active Alert"}
