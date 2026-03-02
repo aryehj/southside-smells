@@ -444,7 +444,7 @@ def generate_html(reading, history):
         time_str = f"{hours}h {mins:02d}m" if hours else f"{mins}m"
         eta_html = (
             f'<div class="eta-box active">'
-            f'<div class="eta-label">Estimated time for Calumet emissions to reach Hyde Park</div>'
+            f'<div class="eta-label">Estimated travel time from the Calumet corridor</div>'
             f'<div class="eta-value">~{time_str}</div>'
             f'<div class="eta-note">Based on current wind speed ({wind_speed:.0f}&nbsp;mph)'
             f' and ~12&nbsp;mi to nearest corridor sources.</div>'
@@ -453,10 +453,9 @@ def generate_html(reading, history):
     else:
         eta_html = (
             f'<div class="eta-box inactive">'
-            f'<div class="eta-label">Estimated time for Calumet emissions to reach Hyde Park</div>'
+            f'<div class="eta-label">Estimated travel time from the Calumet corridor</div>'
             f'<div class="eta-value">N/A</div>'
-            f'<div class="eta-note">Wind is from the {compass_label} —'
-            f' industrial corridor emissions are not heading toward Hyde Park right now.</div>'
+            f'<div class="eta-note">Applies only when wind is from the SE (roughly 90°–180°).</div>'
             f'</div>'
         )
 
@@ -591,7 +590,7 @@ def generate_html(reading, history):
   </div>
 
   <h1>Southside Smells Monitor</h1>
-  <p class="subtitle">Hyde Park air quality — industrial odor risk from the Calumet corridor</p>
+  <p class="subtitle">Hyde Park air quality · Tracking industrial odor risk from the Calumet corridor</p>
   <p class="last-updated">Last updated <time datetime="{timestamp_iso}">{timestamp_display}</time> Chicago time</p>
 
   <div class="badge">{level} <span class="score">{reading["risk_score"]}/100</span></div>
