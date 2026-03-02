@@ -1,10 +1,8 @@
 name: Air Quality Monitor
 
 on:
-  # Manual trigger only for initial rollout.
-  # To enable automatic polling, uncomment the schedule below.
-  # schedule:
-  #   - cron: '0 * * * *'  # Every hour (use '*/30 * * * *' for public repos)
+  schedule:
+    - cron: '0 * * * *'  # Every hour on the hour
   workflow_dispatch: {}
 
 permissions:
