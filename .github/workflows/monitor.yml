@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   monitor:
@@ -21,6 +22,7 @@ jobs:
       - run: pip install requests
 
       - name: Run air quality monitor
+        id: monitor
         run: python code/smell_monitor.py
         env:
           PURPLEAIR_API_KEY: ${{ secrets.PURPLEAIR_API_KEY }}
@@ -39,3 +41,14 @@ jobs:
           git add docs/index.html data/monitor_history.json
           git diff --staged --quiet || git commit -m "update air quality status"
           git push
+
+      - name: Trigger SE wind alert
+        if: steps.monitor.outputs.se_wind == 'true'
+        run: |
+          gh workflow run se-wind-alert.yml \
+            -f wind_dir="${{ steps.monitor.outputs.wind_dir }}" \
+            -f wind_speed="${{ steps.monitor.outputs.wind_speed }}" \
+            -f risk_level="${{ steps.monitor.outputs.risk_level }}" \
+            -f risk_score="${{ steps.monitor.outputs.risk_score }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,29 @@
+name: SE Wind Alert
+
+on:
+  workflow_dispatch:
+    inputs:
+      wind_dir:
+        description: 'Wind direction (degrees)'
+        required: false
+      wind_speed:
+        description: 'Wind speed (mph)'
+        required: false
+      risk_level:
+        description: 'Risk level'
+        required: false
+      risk_score:
+        description: 'Risk score (0-100)'
+        required: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SE wind notification
+        run: |
+          echo "Southeasterly wind detected in Hyde Park"
+          echo "Wind: ${{ inputs.wind_dir }} degrees at ${{ inputs.wind_speed }} mph"
+          echo "Risk: ${{ inputs.risk_level }} (${{ inputs.risk_score }}/100)"
+          echo ""
+          echo "Monitor: https://aryehj.github.io/southside-smells/"
