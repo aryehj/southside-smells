@@ -110,7 +110,14 @@ def aqs_get(endpoint, params):
         with urllib.request.urlopen(req, timeout=60) as resp:
             return json.loads(resp.read())
     except urllib.error.HTTPError as e:
-        print(f"    API error {e.code}: {e.read().decode()[:200]}")
+        body = e.read().decode()
+        # Try to extract the structured error message from AQS JSON
+        try:
+            err_json = json.loads(body)
+            err_msg = err_json.get("Header", [{}])[0].get("error", body[:200])
+        except (json.JSONDecodeError, IndexError):
+            err_msg = body[:200]
+        print(f"    API error {e.code}: {err_msg}")
         return None
     except urllib.error.URLError as e:
         print(f"    Network error: {e.reason}")
@@ -124,39 +131,60 @@ def aqs_delay():
 # ── Phase 1: Discover monitors ──
 
 def discover_monitors():
-    """Find all monitors for our parameters of interest in both counties."""
+    """Find all monitors for our parameters of interest in both counties.
+    AQS limits queries to 1 year, so we query per-year and deduplicate."""
     all_monitors = []
+    seen = set()  # (state, county, site, param, poc) to deduplicate
+
+    # Query year-by-year to stay within AQS 1-year limit
+    year_ranges = [
+        ("20250101", "20251231"),
+        ("20240101", "20241231"),
+        ("20230101", "20231231"),
+    ]
 
     for state, county, county_name in COUNTIES:
         for param_code, param_name, _ in PARAMETERS:
             print(f"  Querying monitors: {param_name} ({param_code}) in {county_name}...")
 
-            result = aqs_get("monitors/byCounty", {
-                "param": param_code,
-                "bdate": "20200101",
-                "edate": "20251231",
-                "state": state,
-                "county": county,
-            })
-            aqs_delay()
+            data = []
+            for bdate, edate in year_ranges:
+                result = aqs_get("monitors/byCounty", {
+                    "param": param_code,
+                    "bdate": bdate,
+                    "edate": edate,
+                    "state": state,
+                    "county": county,
+                })
+                aqs_delay()
 
-            if not result:
-                print(f"    → No response")
-                continue
+                if not result:
+                    continue
 
-            header = result.get("Header", [{}])
-            if header and header[0].get("status") == "Failed":
-                print(f"    → {header[0].get('error', 'Unknown error')}")
-                continue
+                header = result.get("Header", [{}])
+                if header and header[0].get("status") == "Failed":
+                    # Some params may simply not exist in a county — not an error
+                    break
 
-            data = result.get("Data", [])
+                year_data = result.get("Data", [])
+                if year_data:
+                    data.extend(year_data)
+                    break  # found monitors, no need to check older years
+
             if not data:
                 print(f"    → No monitors found")
                 continue
 
-            print(f"    → {len(data)} monitor record(s)")
-
+            # Deduplicate and collect
+            new_count = 0
             for mon in data:
+                key = (state, county, mon.get("site_number", ""),
+                       param_code, mon.get("poc", ""))
+                if key in seen:
+                    continue
+                seen.add(key)
+                new_count += 1
+
                 lat = mon.get("latitude")
                 lon = mon.get("longitude")
                 dist = haversine(HP_LAT, HP_LON, lat, lon) if lat and lon else None
@@ -183,6 +211,8 @@ def discover_monitors():
                     "last_sample_date": mon.get("last_sample_date", ""),
                     "reporting_agency": mon.get("reporting_agency", ""),
                 })
+
+            print(f"    → {new_count} monitor(s)")
 
     return all_monitors
 
