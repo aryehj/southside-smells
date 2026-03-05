@@ -118,17 +118,27 @@ def find_col(candidates, available):
 # ─────────────────────────────────────────────────────────────────────────────
 
 print("Step 1: Discovering dataset schema...")
-sample = soda_get({"$limit": 1, "$offset": 0})
+# Use the Socrata metadata endpoint — unlike a data row, it lists every column
+# even when values are null in all rows, which is common for sparse fields like NO₂.
+DATASET_ID   = BASE_URL.split("/resource/")[1].replace(".json", "")
+meta_url     = f"https://data.cityofchicago.org/api/views/{DATASET_ID}.json"
+meta_headers = {"Accept": "application/json"}
+if APP_TOKEN:
+    meta_headers["X-App-Token"] = APP_TOKEN
+try:
+    meta_req = urllib.request.Request(meta_url, headers=meta_headers)
+    with urllib.request.urlopen(meta_req, timeout=30) as resp:
+        meta = json.loads(resp.read())
+    all_cols = [c["fieldName"] for c in meta.get("columns", [])
+                if not c["fieldName"].startswith(":@")]
+except Exception as e:
+    print(f"Metadata endpoint failed ({e}); falling back to data-row discovery.")
+    sample = soda_get({"$limit": 1, "$offset": 0})
+    if not sample or not isinstance(sample, list) or len(sample) == 0:
+        print("Could not reach Chicago Open Data Portal. Check your network connection.")
+        sys.exit(1)
+    all_cols = [k for k in sample[0].keys() if not k.startswith(":@")]
 
-if not sample:
-    print("Could not reach Chicago Open Data Portal. Check your network connection.")
-    sys.exit(1)
-
-if not isinstance(sample, list) or len(sample) == 0:
-    print(f"Unexpected API response shape: {type(sample)!r}")
-    sys.exit(1)
-
-all_cols = list(sample[0].keys())
 print(f"Available columns ({len(all_cols)}):")
 for c in all_cols:
     print(f"  {c}")
