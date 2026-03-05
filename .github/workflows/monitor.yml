@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   actions: write
+  issues: write
 
 jobs:
   monitor:
@@ -33,6 +34,17 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
           ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+
+      - name: Trigger SE wind alert
+        if: steps.monitor.outputs.se_wind == 'true'
+        run: |
+          gh workflow run se-wind-alert.yml \
+            -f wind_dir="${{ steps.monitor.outputs.wind_dir }}" \
+            -f wind_speed="${{ steps.monitor.outputs.wind_speed }}" \
+            -f risk_level="${{ steps.monitor.outputs.risk_level }}" \
+            -f risk_score="${{ steps.monitor.outputs.risk_score }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Commit and push updates
         run: |
