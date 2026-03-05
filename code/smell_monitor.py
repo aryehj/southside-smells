@@ -628,58 +628,54 @@ def main():
         now = datetime.now(timezone(timedelta(hours=-6)))
     is_se = SE_WIND_MIN <= wind_dir <= SE_WIND_MAX
 
-    # ── Non-SE branch: update timestamp + wind display only ──────────────────
-    if not is_se:
-        history = load_history()
-        if history:
-            last = history[-1]
-            ghost = {
-                "timestamp_iso":  now.strftime("%Y-%m-%dT%H:%M:%S%z"),
-                "timestamp_display": format_timestamp_display(now),
-                "wind_dir":       weather["wind_dir"],
-                "wind_speed_mph": weather["wind_speed_mph"],
-                "temperature_f":  weather["temperature_f"],
-                "risk_score":     last["risk_score"],
-                "risk_level":     last["risk_level"],
-                "eta_minutes":    None,
-                "sensors":        last["sensors"],
-            }
-            generate_html(ghost, history)
-            print(f"\nNon-SE winds ({compass(wind_dir)}) — "
-                  "updated wind/timestamp only, skipped PurpleAir.")
-        else:
-            print(f"\nNon-SE winds ({compass(wind_dir)}) — "
-                  "no history yet, skipping HTML update.")
-        print(f"Status page: {HTML_PATH}")
-        # Signal non-SE wind to GitHub Actions
-        github_output = os.environ.get("GITHUB_OUTPUT")
-        if github_output:
-            with open(github_output, "a") as f:
-                f.write("se_wind=false\n")
-        print("Done.")
-        return
+    # ── Fetch PM2.5 if wind is from SE; skip PurpleAir otherwise ─────────────
+    sensor_data = None
+    if is_se:
+        api_key = os.environ.get("PURPLEAIR_API_KEY", "")
+        if not api_key:
+            print("Set PURPLEAIR_API_KEY environment variable.")
+            sys.exit(1)
 
-    # ── SE branch: full pipeline ──────────────────────────────────────────────
-    api_key = os.environ.get("PURPLEAIR_API_KEY", "")
-    if not api_key:
-        print("Set PURPLEAIR_API_KEY environment variable.")
-        sys.exit(1)
+        print("Fetching PM2.5 from PurpleAir...")
+        sensor_data = fetch_pm25(api_key)
+        for s in sensor_data:
+            val = f"{s['pm25']:.1f}" if s["pm25"] is not None else "n/a"
+            print(f"  {s['name']} ({s['dist_mi']} mi): {val} µg/m³")
+    else:
+        print(f"Non-SE winds ({compass(wind_dir)}) — skipping PurpleAir.")
 
-    print("Fetching PM2.5 from PurpleAir...")
-    sensors = fetch_pm25(api_key)
-    for s in sensors:
-        val = f"{s['pm25']:.1f}" if s["pm25"] is not None else "n/a"
-        print(f"  {s['name']} ({s['dist_mi']} mi): {val} µg/m³")
+    # ── Build sensor list for the reading ─────────────────────────────────────
+    # When wind is not SE, carry forward the last known sensor readings (as
+    # context) but mark them stale so the risk score stays at zero.
+    history = load_history()
 
-    # Score
+    if sensor_data is not None:
+        sensors_for_reading = [
+            {"name": s["name"], "pm25": s["pm25"], "dist_mi": s["dist_mi"]}
+            for s in sensor_data
+        ]
+    elif history:
+        # Reuse the most recent sensor snapshot
+        sensors_for_reading = history[-1].get("sensors", [])
+    else:
+        # No history at all yet — use placeholder nulls
+        sensors_for_reading = [
+            {"name": name, "pm25": None, "dist_mi": dist}
+            for _, name, dist, _ in SENSORS
+        ]
+
+    # ── Score ─────────────────────────────────────────────────────────────────
+    # compute_risk already returns 0 when wind is outside the SE arc, so we
+    # can call it unconditionally.
     risk_score, risk_level, eta_minutes = compute_risk(
-        weather["wind_dir"], weather["wind_speed_mph"], sensors
+        weather["wind_dir"], weather["wind_speed_mph"],
+        sensor_data if sensor_data else sensors_for_reading,
     )
     print(f"\nRisk: {risk_level} ({risk_score}/100)")
     if eta_minutes:
         print(f"ETA:  ~{eta_minutes // 60}h {eta_minutes % 60}m")
 
-    # Build reading
+    # ── Build reading ─────────────────────────────────────────────────────────
     reading = {
         "timestamp_iso": now.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "timestamp_display": format_timestamp_display(now),
@@ -689,35 +685,45 @@ def main():
         "risk_score": risk_score,
         "risk_level": risk_level,
         "eta_minutes": eta_minutes,
-        "sensors": [
-            {"name": s["name"], "pm25": s["pm25"], "dist_mi": s["dist_mi"]}
-            for s in sensors
-        ],
+        "sensors": sensors_for_reading,
     }
 
-    # Update history
-    history = load_history()
+    # ── Update history (always — regardless of wind direction) ────────────────
     prev_level = previous_risk_level(history)
     history.append(reading)
     history = history[-MAX_HISTORY:]
     save_history(history)
 
-    # Generate status page
+    # ── Generate status page ──────────────────────────────────────────────────
     generate_html(reading, history)
     print(f"\nStatus page: {HTML_PATH}")
 
-    # Signal SE wind details to GitHub Actions
+    # ── Signal wind details to GitHub Actions ─────────────────────────────────
     github_output = os.environ.get("GITHUB_OUTPUT")
     if github_output:
         with open(github_output, "a") as f:
-            f.write("se_wind=true\n")
-            f.write(f"wind_dir={weather['wind_dir']}\n")
-            f.write(f"wind_speed={weather['wind_speed_mph']:.0f}\n")
-            f.write(f"risk_level={risk_level}\n")
-            f.write(f"risk_score={risk_score}\n")
+            f.write(f"se_wind={'true' if is_se else 'false'}\n")
+            if is_se:
+                f.write(f"wind_dir={weather['wind_dir']}\n")
+                f.write(f"wind_speed={weather['wind_speed_mph']:.0f}\n")
+                f.write(f"risk_level={risk_level}\n")
+                f.write(f"risk_score={risk_score}\n")
 
-    # Email alert on transition to High or Active Alert
+    # ── Email alert on transition to High or Active Alert ─────────────────────
+    # Treat a gap of >2 hours since the last logged reading as a fresh baseline
+    # so that returning SE wind after a long non-SE stretch properly triggers
+    # an alert instead of comparing against a stale entry from hours/days ago.
     alert_levels = {"High", "Active Alert"}
+    if len(history) >= 2:
+        prev_ts = history[-2].get("timestamp_iso", "")
+        try:
+            prev_dt = datetime.fromisoformat(prev_ts)
+            gap = now - prev_dt
+            if gap > timedelta(hours=2):
+                prev_level = "Low"
+        except (ValueError, TypeError):
+            prev_level = "Low"
+
     if risk_level in alert_levels and prev_level not in alert_levels:
         print("Risk escalated — sending alert email...")
         send_alert_email(reading)

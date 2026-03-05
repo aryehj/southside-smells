@@ -42,13 +42,3 @@ jobs:
           git diff --staged --quiet || git commit -m "update air quality status"
           git push
 
-      - name: Trigger SE wind alert
-        if: steps.monitor.outputs.se_wind == 'true'
-        run: |
-          gh workflow run se-wind-alert.yml \
-            -f wind_dir="${{ steps.monitor.outputs.wind_dir }}" \
-            -f wind_speed="${{ steps.monitor.outputs.wind_speed }}" \
-            -f risk_level="${{ steps.monitor.outputs.risk_level }}" \
-            -f risk_score="${{ steps.monitor.outputs.risk_score }}"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
