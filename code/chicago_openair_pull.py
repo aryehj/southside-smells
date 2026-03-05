@@ -198,27 +198,35 @@ if not COL_PM25 and not COL_NO2:
 
 print("Step 2: Enumerating sensor locations within the study period...")
 
-# Query unique (sensor_id, lat, lon[, name]) combinations appearing in the
-# date range. $group by these columns to get one representative row per sensor.
-group_cols = [COL_SENSOR, COL_LAT, COL_LON]
-if COL_NAME:
-    group_cols.append(COL_NAME)
-group_str = ",".join(group_cols)
+# Fetch one calendar day of raw rows to discover sensor locations.
+# $group aggregation times out on this large dataset; a single day gives at
+# most 277 sensors × 24 hourly rows ≈ 6,600 rows — fast and sufficient.
+# We deduplicate by sensor_id in Python after fetching.
+select_cols = ",".join(c for c in [COL_SENSOR, COL_NAME, COL_LAT, COL_LON] if c)
 
 sensor_rows = soda_get({
-    "$select": group_str,
-    "$where": (f"{COL_TIME} >= '{START_STR}' AND {COL_TIME} < '{END_STR}'"
-               f" AND {COL_LAT} IS NOT NULL AND {COL_LON} IS NOT NULL"),
-    "$group":  group_str,
-    "$limit":  5000,
+    "$select": select_cols,
+    "$where":  (f"{COL_TIME} >= '2025-10-01T00:00:00'"
+                f" AND {COL_TIME} < '2025-10-02T00:00:00'"
+                f" AND {COL_LAT} IS NOT NULL AND {COL_LON} IS NOT NULL"),
+    "$limit":  10000,
 })
 
 if not sensor_rows:
-    print("Failed to enumerate sensors. The $group query may not be supported. "
-          "Try fetching without $group (comment out the $group parameter).")
+    print("Failed to enumerate sensors.")
     sys.exit(1)
 
-print(f"Found {len(sensor_rows)} unique sensor-location records in study period.")
+# Deduplicate — keep first occurrence of each sensor_id
+seen = set()
+sensor_rows_dedup = []
+for row in sensor_rows:
+    sid = str(row.get(COL_SENSOR, "")).strip()
+    if sid and sid not in seen:
+        seen.add(sid)
+        sensor_rows_dedup.append(row)
+sensor_rows = sensor_rows_dedup
+
+print(f"Found {len(sensor_rows)} unique sensors active on 2025-10-01.")
 
 sensors = {}   # sensor_id (str) → metadata dict
 for row in sensor_rows:
