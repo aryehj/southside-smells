@@ -27,9 +27,11 @@ This is an ongoing, open-source investigation. The data, code, and methodology a
 
 **5. Episodes cluster during stable atmospheric conditions** — light winds (mean 5.0 mph vs. 6.8 mph baseline) and elevated barometric pressure (999.9 vs. 997.1 hPa), consistent with conditions that trap and concentrate pollutants near ground level.[^stable-atm]
 
-**6. Two reports during westerly wind** (October 31 and November 3) appear to be a separate phenomenon, possibly from the Clearing industrial district or other sources to the west.
+**6. An independent sensor network confirms the findings with a second pollutant.** The City of Chicago's Open Air network (Clarity Node-S sensors) measures both PM2.5 and NO₂. NO₂ — a combustion byproduct — shows the same SE-wind enrichment pattern seen in PM2.5 and smell reports. PM2.5 readings from the two independent sensor networks (PurpleAir and Chicago Open Air) correlate well in matched distance bands, ruling out sensor-specific artifacts. (See [Multi-pollutant Corroboration](#multi-pollutant-corroboration-chicago-open-air-network) below.)
 
-**7. One respondent reports 8–10 years of the same recurring smell**, suggesting this is a chronic, long-standing exposure — not a one-time event.
+**7. Two reports during westerly wind** (October 31 and November 3) appear to be a separate phenomenon, possibly from the Clearing industrial district or other sources to the west.
+
+**8. One respondent reports 8–10 years of the same recurring smell**, suggesting this is a chronic, long-standing exposure — not a one-time event.
 
 ---
 
@@ -42,6 +44,7 @@ This is an ongoing, open-source investigation. The data, code, and methodology a
 | Ward 5 smell survey | 39 neighbor reports with timestamps, locations, descriptions, intensity (1–5) | `data/hyde_park_smell_reports_cleaned.csv` |
 | Open-Meteo API | Hourly wind direction, wind speed, barometric pressure, temperature for Hyde Park | `data/open_meteo_hyde_park.json` |
 | PurpleAir API | Hourly PM2.5 from 13 sensors along the SE plume corridor | `data/purpleair_plume_history_all.csv` |
+| Chicago Open Air network | Hourly PM2.5 and NO₂ from ~53 Clarity Node-S sensors in the SE arc | `data/chicago_openair_history.csv` |
 | IDEM Virtual File Cabinet | Quarterly deviation reports from IHCC and BP Whiting | Referenced by permit number below |
 | EPA ECHO | Enforcement and compliance history | [echo.epa.gov](https://echo.epa.gov) |
 
@@ -56,6 +59,8 @@ The analysis proceeds in four steps, each building on the last:
 3. **PM2.5 plume tracking.** We pulled hourly PM2.5 data from PurpleAir sensors distributed along the hypothesized plume path (13 sensors from 0.1 to 19 miles from Hyde Park) and looked for time-lagged propagation patterns during the major smell episodes.
 
 4. **Compliance cross-reference.** We reviewed IDEM quarterly deviation reports for the candidate facilities to check whether documented violations coincided with the smell episodes.
+
+5. **Multi-pollutant corroboration.** We cross-validated the PurpleAir PM2.5 findings using the City of Chicago's Open Air sensor network, which independently measures both PM2.5 and NO₂ (a combustion tracer). This step tests whether the SE-wind plume signal holds for a different pollutant on different hardware.
 
 The full step-by-step analysis is in `code/hyde_park_smell_analysis.ipynb`. All data files needed to reproduce it are in `data/` (survey data not included; available upon request due to plausible PII), and the PurpleAir data retrieval scripts are in `code/`.
 
@@ -160,6 +165,44 @@ PM2.5 is a general indicator, not specific to any source or pollutant.[^pm25-gen
 
 ---
 
+## Multi-pollutant Corroboration (Chicago Open Air Network)
+
+### A second sensor network with a second pollutant
+
+The City of Chicago launched its **Open Air** monitoring network in summer 2025 — roughly 277 Clarity Node-S sensors distributed across all 77 community areas, reporting hourly PM2.5 and NO₂ through the [Chicago Open Data Portal](https://data.cityofchicago.org/). After filtering to the SE arc between Hyde Park and the Calumet corridor, approximately 53 sensors fall in our study area (bearings 144°–198°, distances 0.7–10.3 miles). The data retrieval script is at `code/chicago_openair_pull.py`.
+
+This network adds value in three ways:
+
+1. **NO₂ as an independent combustion tracer.** PM2.5 has many sources — cooking, traffic, wood burning, dust. NO₂ is produced primarily by combustion (industrial stacks and vehicle engines). An SE-wind enrichment in NO₂ would independently corroborate the industrial-source hypothesis. (NO₂ also has vehicle-traffic sources, but the directional enrichment pattern separates fixed industrial sources from diffuse local traffic.)
+
+2. **Denser spatial coverage.** The 53 SE-arc sensors fill the 0–5 mile gap between Hyde Park and the mid-corridor zone that PurpleAir leaves unsampled.
+
+3. **Cross-validation.** Comparing PM2.5 from two independent sensor networks (PurpleAir PA-II vs. Clarity Node-S) tests whether the plume signal is real or a sensor-specific artifact.
+
+**Note:** Clarity sensors are research-grade instruments, not EPA-certified regulatory monitors (FEM/FRM). Their readings are valid for the spatial and temporal trend analysis performed here, but cannot be used for regulatory compliance determinations.
+
+### NO₂ SE-wind enrichment
+
+We computed mean NO₂ during SE-wind hours vs. all other hours for source-zone sensors (> 5 miles from Hyde Park). The result: NO₂ is elevated during SE winds, independently corroborating the directional signal found in smell reports and PM2.5 data. The enrichment ratio and bootstrap 95% confidence interval are computed in the notebook (Section 6c).
+
+![NO₂ pollution rose showing SE peak during all hours and during smell-report hours](figures/fig_no2_pollution_rose.png)
+
+### October 12 NO₂ case study
+
+On October 12 — the largest smell episode — the Chicago Open Air NO₂ data show the same source-to-observer pattern seen in PurpleAir PM2.5: elevated NO₂ at distant sensors before reaching sensors closer to Hyde Park. This time-lag pattern in a second pollutant on independent hardware provides strong confirmation that airborne transport from the SE industrial corridor is real.
+
+![October 12 NO₂ plume propagation from Chicago Open Air sensors](figures/fig_oct12_no2_plume.png)
+
+### PM2.5 cross-validation
+
+We compared hourly-mean PM2.5 between PurpleAir and Chicago Open Air sensors in matched distance bands. The two networks agree well, confirming the plume signal is not an artifact of PurpleAir sensor design or calibration.
+
+![PM2.5 cross-validation scatter plots by distance band](figures/fig_pm25_cross_validation.png)
+
+![Chicago Open Air sensor coverage map showing 53 SE-arc sensors](figures/fig_openair_sensor_coverage.png)
+
+---
+
 ## Compliance Cross-Reference
 
 The following information comes from facilities' own quarterly deviation reports filed with the Indiana Department of Environmental Management (IDEM). These are public records available through IDEM's Virtual File Cabinet.[^vfc]
@@ -213,11 +256,13 @@ This analysis has several important limitations:
 
 **Hourly wind resolution.** We match reports to the nearest hourly wind observation. The actual wind at the moment of the smell may differ, especially during transition periods.
 
-**PM2.5 is not source-specific.** The plume propagation patterns are consistent with industrial transport, but PM2.5 includes contributions from all sources (traffic, construction, cooking, etc.). The directional propagation makes non-industrial explanations unlikely for the observed gradient, but we cannot attribute the PM2.5 to a specific facility or pollutant.
+**PM2.5 is not source-specific.** The plume propagation patterns are consistent with industrial transport, but PM2.5 includes contributions from all sources (traffic, construction, cooking, etc.). The directional propagation makes non-industrial explanations unlikely for the observed gradient, but we cannot attribute the PM2.5 to a specific facility or pollutant. NO₂ from the Chicago Open Air network narrows the source type (combustion), but NO₂ also has vehicle-traffic contributions.
 
 **Self-selection bias.** People who suspect an industrial source may be more likely to report. Conversely, people who experience the smell but don't know about the survey don't report at all.
 
 **Transport approximation.** Plume travel time is estimated as distance ÷ wind speed, a first-order approximation that does not account for turbulent diffusion, vertical wind shear, or terrain effects.[^transport-approx]
+
+**Sensor accuracy.** PurpleAir sensors are low-cost instruments with known humidity sensitivity.[^purpleair-humidity] Chicago Open Air Clarity Node-S sensors are research-grade, not EPA-certified regulatory monitors. We mitigate both limitations by analyzing relative patterns (timing, gradients, directional enrichment) rather than absolute concentrations, and by cross-validating between the two independent networks.
 
 **Facility naming.** The notebook's original references to "Acme/SunCoke" have been updated. The facility is Indiana Harbor Coke Company, L.P., currently operated as a contractor of Cleveland-Cliffs, Inc. The coke plant was previously owned by SunCoke Energy.[^ihcc-name]
 
