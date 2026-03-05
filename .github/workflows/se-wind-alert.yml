@@ -16,14 +16,92 @@ on:
         description: 'Risk score (0-100)'
         required: false
 
+permissions:
+  issues: write
+
 jobs:
   notify:
     runs-on: ubuntu-latest
+    # Only notify on High or Active Alert — skip Low/Moderate
+    if: inputs.risk_level == 'High' || inputs.risk_level == 'Active Alert'
     steps:
-      - name: SE wind notification
-        run: |
-          echo "Southeasterly wind detected in Hyde Park"
-          echo "Wind: ${{ inputs.wind_dir }} degrees at ${{ inputs.wind_speed }} mph"
-          echo "Risk: ${{ inputs.risk_level }} (${{ inputs.risk_score }}/100)"
-          echo ""
-          echo "Monitor: https://aryehj.github.io/southside-smells/"
+      - name: Post alert to GitHub issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '🔔 Air Quality Alert Thread';
+            const label = 'air-quality-alert';
+            const riskLevel = '${{ inputs.risk_level }}';
+            const riskScore = '${{ inputs.risk_score }}';
+            const windDir = '${{ inputs.wind_dir }}';
+            const windSpeed = '${{ inputs.wind_speed }}';
+            const now = new Date().toLocaleString('en-US', {
+              timeZone: 'America/Chicago',
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            });
+
+            // Ensure the label exists
+            try {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label,
+                color: 'e3342f',
+                description: 'Automated air quality alerts',
+              });
+            } catch (e) {
+              // Label already exists — that's fine
+            }
+
+            // Find or create the alert thread issue
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: label,
+              state: 'open',
+              per_page: 1,
+            });
+
+            let issueNumber;
+            if (issues.length > 0) {
+              issueNumber = issues[0].number;
+            } else {
+              const { data: created } = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                labels: [label],
+                body: [
+                  'This issue receives automated comments whenever the air quality monitor ',
+                  'detects **High** or **Active Alert** risk from southeasterly winds.',
+                  '',
+                  'GitHub sends email notifications for each new comment. To stop alerts, ',
+                  'unsubscribe from this issue or close it.',
+                  '',
+                  'Dashboard: https://aryehj.github.io/southside-smells/',
+                ].join('\n'),
+              });
+              issueNumber = created.number;
+            }
+
+            // Post the alert as a comment
+            const body = [
+              `### ${riskLevel} — ${now} CT`,
+              '',
+              `| Metric | Value |`,
+              `|--------|-------|`,
+              `| Risk | **${riskLevel}** (${riskScore}/100) |`,
+              `| Wind | ${windDir}° at ${windSpeed} mph |`,
+              '',
+              `[View dashboard](https://aryehj.github.io/southside-smells/)`,
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: body,
+            });
+
+            console.log(`Posted alert to issue #${issueNumber}`);
