@@ -137,21 +137,26 @@ print()
 # Map logical fields to actual column names.
 # Socrata converts special characters (e.g. "." → "_") in some export formats;
 # we try both variants so the script works regardless of API version.
-COL_TIME   = find_col(["measurement_time", "time", "timestamp",
+COL_TIME   = find_col(["startofperiod",
+                        "measurement_time", "time", "timestamp",
                         "date_time", "start_time", "hour"], all_cols)
 COL_LAT    = find_col(["latitude", "lat", "location_latitude",
                         "sensor_latitude"], all_cols)
 COL_LON    = find_col(["longitude", "lon", "long", "location_longitude",
                         "sensor_longitude"], all_cols)
-COL_SENSOR = find_col(["sensor_id", "sensor_index", "device_id",
+COL_SENSOR = find_col(["datasourceid",
+                        "sensor_id", "sensor_index", "device_id",
                         "sensorid", "node_id", "id"], all_cols)
 COL_NAME   = find_col(["sensor_name", "name", "location_name",
                         "device_name", "site_name"], all_cols)
-COL_PM25   = find_col(["pm2_5_value", "pm25_value", "pm2_5",
+COL_PM25   = find_col(["pm2_5concmass1hourmean_value",
+                        "pm2_5concmass1hourmean_raw",
+                        "pm2_5_value", "pm25_value", "pm2_5",
                         "pm25", "pm2_5_avg", "pm25_avg",
-                        "value_pm2_5", "pm2_5_calibrated",
-                        "pm2.5_value", "pm2.5"], all_cols)
-COL_NO2    = find_col(["no2_value", "no2", "no2_ppb",
+                        "value_pm2_5", "pm2_5_calibrated"], all_cols)
+COL_NO2    = find_col(["no2conc1hourmean_value",
+                        "no2conc1hourmean_raw",
+                        "no2_value", "no2", "no2_ppb",
                         "value_no2", "no2_calibrated"], all_cols)
 
 print("Column mapping:")
