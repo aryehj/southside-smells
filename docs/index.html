@@ -20,7 +20,7 @@
   .last-updated time { font-weight:500; color:#64748b; }
   .badge { display:inline-block; padding:12px 24px; border-radius:12px;
             font-size:28px; font-weight:700; color:#fff;
-            background:#22c55e; margin-bottom:16px; }
+            background:#f97316; margin-bottom:16px; }
   .score { font-size:14px; font-weight:400; opacity:0.9; }
   .card { background:#fff; border:1px solid #e2e8f0; border-radius:10px;
            padding:16px; margin-bottom:14px; }
@@ -60,22 +60,22 @@
 
   <h1>Southside Smells Monitor</h1>
   <p class="subtitle">Hyde Park air quality · Tracking industrial odor risk from the Calumet corridor</p>
-  <p class="last-updated">Last updated <time datetime="2026-03-06T07:47:46-0600">6 March 2026 at 07:47 AM</time> Chicago time</p>
+  <p class="last-updated">Last updated <time datetime="2026-03-06T08:30:47-0600">6 March 2026 at 08:30 AM</time> Chicago time</p>
 
-  <div class="badge">Low <span class="score">23/100</span></div>
+  <div class="badge">High <span class="score">68/100</span></div>
 
-  <div class="eta-box active"><div class="eta-label">Estimated travel time from the Calumet corridor</div><div class="eta-value">~9h 31m</div><div class="eta-note">Based on current wind speed (4&nbsp;mph) and ~12&nbsp;mi to nearest corridor sources.</div></div>
+  <div class="eta-box active"><div class="eta-label">Estimated travel time from the Calumet corridor</div><div class="eta-value">~5h 00m</div><div class="eta-note">Based on current wind speed (8&nbsp;mph) and ~12&nbsp;mi to nearest corridor sources.</div></div>
 
   <div class="card">
     <h2>Current Wind</h2>
     <div class="wind-row">
-      <svg viewBox="0 0 40 40" style="width:40px;height:40px"><g transform="rotate(288,20,20)"><line x1="20" y1="34" x2="20" y2="6" stroke="#1e293b" stroke-width="2.5"/><polyline points="12,14 20,6 28,14" fill="none" stroke="#1e293b" stroke-width="2.5" stroke-linejoin="round"/></g></svg>
+      <svg viewBox="0 0 40 40" style="width:40px;height:40px"><g transform="rotate(322,20,20)"><line x1="20" y1="34" x2="20" y2="6" stroke="#1e293b" stroke-width="2.5"/><polyline points="12,14 20,6 28,14" fill="none" stroke="#1e293b" stroke-width="2.5" stroke-linejoin="round"/></g></svg>
       <div class="wind-detail">
-        <strong>108° E</strong><br>
-        4 mph &middot; 42.0°F
+        <strong>142° SE</strong><br>
+        8 mph &middot; 49.6°F
       </div>
     </div>
-    <p class="explain"><span class="warn">Wind is from the E (108°) — carrying Calumet industrial emissions toward Hyde Park.</span> The corridor sits 10–18 miles to the southeast; southeasterly winds (roughly 90°–180°) are the key risk signal for neighborhood odors.</p>
+    <p class="explain"><span class="warn">Wind is from the SE (142°) — carrying Calumet industrial emissions toward Hyde Park.</span> The corridor sits 10–18 miles to the southeast; southeasterly winds (roughly 90°–180°) are the key risk signal for neighborhood odors.</p>
   </div>
 
   <div class="card"><h2>PM2.5 Sensor Readings (µg/m³)</h2><p class="explain no-border">These sensors form a chain between the Calumet industrial
@@ -84,9 +84,9 @@
     breathing, or about to breathe</span> — elevated readings that appear first at distant
     sensors and then at closer ones signal an arriving plume. US&nbsp;EPA considers levels
     above 12&nbsp;µg/m³ unhealthy for sensitive groups; above 35&nbsp;µg/m³ unhealthy
-    for everyone.</p><table><tr><th>Sensor</th><th>Distance</th><th>PM2.5</th></tr><tr><td>Progressive Community Church</td><td>19.1 mi</td><td style="color:#eab308;font-weight:600">17.5</td></tr><tr><td>Canalport</td><td>12.4 mi</td><td style="color:#22c55e;font-weight:600">0.9</td></tr><tr><td>Bug</td><td>6.9 mi</td><td style="color:#eab308;font-weight:600">31.5</td></tr><tr><td>Rooster</td><td>5.4 mi</td><td style="color:#eab308;font-weight:600">26.7</td></tr><tr><td>Purple-HP-1</td><td>0.1 mi</td><td style="color:#eab308;font-weight:600">20.3</td></tr></table></div>
+    for everyone.</p><table><tr><th>Sensor</th><th>Distance</th><th>PM2.5</th></tr><tr><td>Progressive Community Church</td><td>19.1 mi</td><td style="color:#eab308;font-weight:600">13.5</td></tr><tr><td>Canalport</td><td>12.4 mi</td><td style="color:#22c55e;font-weight:600">0.9</td></tr><tr><td>Bug</td><td>6.9 mi</td><td style="color:#eab308;font-weight:600">27.7</td></tr><tr><td>Rooster</td><td>5.4 mi</td><td style="color:#eab308;font-weight:600">22.4</td></tr><tr><td>Purple-HP-1</td><td>0.1 mi</td><td style="color:#eab308;font-weight:600">24.0</td></tr></table></div>
 
-  <div class="card"><h2>Risk Score — Last 47 Hours</h2><svg viewBox="0 0 600 80" style="width:100%;max-width:600px;height:80px"><line x1="0" y1="52.0" x2="600" y2="52.0" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4,4"/><text x="598" y="49.0" fill="#9ca3af" font-size="10" text-anchor="end">Mod</text><line x1="0" y1="33.6" x2="600" y2="33.6" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4,4"/><text x="598" y="30.6" fill="#9ca3af" font-size="10" text-anchor="end">High</text><line x1="0" y1="10.5" x2="600" y2="10.5" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4,4"/><text x="598" y="7.5" fill="#9ca3af" font-size="10" text-anchor="end">Alert</text><polyline points="0.0,75.0 13.0,75.0 26.1,75.0 39.1,75.0 52.2,75.0 65.2,75.0 78.3,65.8 91.3,75.0 104.3,63.0 117.4,55.7 130.4,52.0 143.5,47.4 156.5,59.3 169.6,55.7 182.6,67.6 195.7,70.4 208.7,75.0 221.7,52.9 234.8,66.7 247.8,75.0 260.9,52.9 273.9,54.7 287.0,65.8 300.0,65.8 313.0,36.3 326.1,19.7 339.1,7.8 352.2,41.8 365.2,5.0 378.3,75.0 391.3,75.0 404.3,75.0 417.4,75.0 430.4,75.0 443.5,16.1 456.5,47.4 469.6,46.4 482.6,75.0 495.7,75.0 508.7,75.0 521.7,75.0 534.8,75.0 547.8,75.0 560.9,9.6 573.9,8.7 587.0,17.9 600.0,53.8" fill="none" stroke="#22c55e" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="600.0" cy="53.8" r="4" fill="#22c55e"/></svg><div style="display:flex;justify-content:space-between;font-size:12px;color:#6b7280;margin-top:4px"><span>2026-03-01T13:30</span><span></span></div></div>
+  <div class="card"><h2>Risk Score — Last 48 Hours</h2><svg viewBox="0 0 600 80" style="width:100%;max-width:600px;height:80px"><line x1="0" y1="52.0" x2="600" y2="52.0" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4,4"/><text x="598" y="49.0" fill="#9ca3af" font-size="10" text-anchor="end">Mod</text><line x1="0" y1="33.6" x2="600" y2="33.6" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4,4"/><text x="598" y="30.6" fill="#9ca3af" font-size="10" text-anchor="end">High</text><line x1="0" y1="10.5" x2="600" y2="10.5" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4,4"/><text x="598" y="7.5" fill="#9ca3af" font-size="10" text-anchor="end">Alert</text><polyline points="0.0,75.0 12.8,75.0 25.5,75.0 38.3,75.0 51.1,75.0 63.8,75.0 76.6,65.8 89.4,75.0 102.1,63.0 114.9,55.7 127.7,52.0 140.4,47.4 153.2,59.3 166.0,55.7 178.7,67.6 191.5,70.4 204.3,75.0 217.0,52.9 229.8,66.7 242.6,75.0 255.3,52.9 268.1,54.7 280.9,65.8 293.6,65.8 306.4,36.3 319.1,19.7 331.9,7.8 344.7,41.8 357.4,5.0 370.2,75.0 383.0,75.0 395.7,75.0 408.5,75.0 421.3,75.0 434.0,16.1 446.8,47.4 459.6,46.4 472.3,75.0 485.1,75.0 497.9,75.0 510.6,75.0 523.4,75.0 536.2,75.0 548.9,9.6 561.7,8.7 574.5,17.9 587.2,53.8 600.0,12.4" fill="none" stroke="#f97316" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="600.0" cy="12.4" r="4" fill="#f97316"/></svg><div style="display:flex;justify-content:space-between;font-size:12px;color:#6b7280;margin-top:4px"><span>2026-03-01T13:30</span><span></span></div></div>
 
   <div class="footer">
     <p>Data: <a href="https://open-meteo.com/">Open-Meteo</a> &middot;
