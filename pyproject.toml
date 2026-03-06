@@ -1,7 +1,7 @@
 [project]
 name = "southside-smells"
 version = "0.1.0"
-description = "Add your description here"
+description = "Data science investigation into recurring chemical odors in Hyde Park, Chicago"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
