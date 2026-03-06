@@ -4,6 +4,8 @@
 
 *Ward 5 Smell Log — October–November 2025*
 
+**[Live Air Quality Monitor →](https://aryehj.github.io/southside-smells/)**
+
 ---
 
 Hyde Park and surrounding neighborhoods share an active community email list called Good Neighbors. Several times over the years, neighbors have exchanged information about strong smells noticed by multiple people simultaneously. Between October 7 and November 3, 2025, neighbors fielded an informal community survey, gathering 39 reports. Most described a **burning plastic or chemical smell**. This analysis correlates those reports with hourly weather data, PM2.5 air quality measurements from a network of sensors, and quarterly compliance reports that nearby industrial facilities filed with state regulators, to identify likely causes.
