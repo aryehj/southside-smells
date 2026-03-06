@@ -27,11 +27,13 @@ This is an ongoing, open-source investigation. The data, code, and methodology a
 
 **5. Episodes cluster during stable atmospheric conditions** — light winds (mean 5.0 mph vs. 6.8 mph baseline) and elevated barometric pressure (999.9 vs. 997.1 hPa), consistent with conditions that trap and concentrate pollutants near ground level.[^stable-atm]
 
-**6. An independent sensor network confirms the findings with a second pollutant.** The City of Chicago's Open Air network (Clarity Node-S sensors) measures both PM2.5 and NO₂. NO₂ — a combustion byproduct — shows the same SE-wind enrichment pattern seen in PM2.5 and smell reports. PM2.5 readings from the two independent sensor networks (PurpleAir and Chicago Open Air) correlate well in matched distance bands, ruling out sensor-specific artifacts. (See [Multi-pollutant Corroboration](#multi-pollutant-corroboration-chicago-open-air-network) below.)
+**6. Two independent sensor networks confirm the findings with additional pollutants.** The City of Chicago's Open Air network (Clarity Node-S sensors) measures both PM2.5 and NO₂. NO₂ — a combustion byproduct — shows the same SE-wind enrichment pattern seen in PM2.5 and smell reports. PM2.5 readings from the two independent sensor networks (PurpleAir and Chicago Open Air) correlate well in matched distance bands, ruling out sensor-specific artifacts. (See [Chicago Open Air Network](#chicago-open-air-network) below.)
 
-**7. Two reports during westerly wind** (October 31 and November 3) appear to be a separate phenomenon, possibly from the Clearing industrial district or other sources to the west.
+**7. EPA regulatory monitors detect elevated SO₂ and benzene on the SE corridor during smell episodes.** Hourly readings from EPA-certified instruments at three Calumet corridor sites (Gary-IITRI, Hammond CAAP, East Chicago-Marina) show SO₂ spikes coinciding with SE winds and smell reports — particularly during the October 25–27 episode. Hourly benzene at East Chicago-Marina tracks smell episodes across the full study period. These are federal-reference-method instruments measuring pollutants specific to coking and refinery operations, providing the strongest source-specific corroboration in the dataset.[^so2-source] (See [EPA Regulatory Monitors](#epa-regulatory-monitors) below.)
 
-**8. One respondent reports 8–10 years of the same recurring smell**, suggesting this is a chronic, long-standing exposure — not a one-time event.
+**8. Two reports during westerly wind** (October 31 and November 3) appear to be a separate phenomenon, possibly from the Clearing industrial district or other sources to the west.
+
+**9. One respondent reports 8–10 years of the same recurring smell**, suggesting this is a chronic, long-standing exposure — not a one-time event.
 
 ---
 
@@ -45,12 +47,13 @@ This is an ongoing, open-source investigation. The data, code, and methodology a
 | Open-Meteo API | Hourly wind direction, wind speed, barometric pressure, temperature for Hyde Park | `data/open_meteo_hyde_park.json` |
 | PurpleAir API | Hourly PM2.5 from 13 sensors along the SE plume corridor | `data/purpleair_plume_history_all.csv` |
 | Chicago Open Air network | Hourly PM2.5 and NO₂ from ~53 Clarity Node-S sensors in the SE arc | `data/chicago_openair_history.csv` |
+| EPA Air Quality System (AQS) | Hourly SO₂ and benzene from EPA-certified monitors in the Calumet corridor | `data/epa_aqs_samples.csv` |
 | IDEM Virtual File Cabinet | Quarterly deviation reports from IHCC and BP Whiting | Referenced by permit number below |
 | EPA ECHO | Enforcement and compliance history | [echo.epa.gov](https://echo.epa.gov) |
 
 ### Methodology overview
 
-The analysis proceeds in four steps, each building on the last:
+The analysis proceeds in six steps, each building on the last:
 
 1. **Wind correlation.** We matched each real-time smell report to the hourly wind observation and asked: does the wind come from a consistent direction during smell episodes? It does — overwhelmingly from the SE. We tested significance with both a binomial test (treating reports as independent) and an episode-level circular-shift permutation test (accounting for temporal clustering and wind autocorrelation).
 
@@ -61,6 +64,8 @@ The analysis proceeds in four steps, each building on the last:
 4. **Compliance cross-reference.** We reviewed IDEM quarterly deviation reports for the candidate facilities to check whether documented violations coincided with the smell episodes.
 
 5. **Multi-pollutant corroboration.** We cross-validated the PurpleAir PM2.5 findings using the City of Chicago's Open Air sensor network, which independently measures both PM2.5 and NO₂ (a combustion tracer). This step tests whether the SE-wind plume signal holds for a different pollutant on different hardware.
+
+6. **Regulatory monitor corroboration.** We checked the findings against EPA-certified regulatory monitors (Air Quality System) at three Calumet corridor sites, which measure hourly SO₂ and benzene — pollutants specific to coking and refinery operations. This step tests whether the pattern holds on federal-reference-method instruments with source-specific pollutants.
 
 The full step-by-step analysis is in `code/hyde_park_smell_analysis.ipynb`. All data files needed to reproduce it are in `data/` (survey data not included; available upon request due to plausible PII), and the PurpleAir data retrieval scripts are in `code/`.
 
@@ -165,9 +170,13 @@ PM2.5 is a general indicator, not specific to any source or pollutant.[^pm25-gen
 
 ---
 
-## Multi-pollutant Corroboration (Chicago Open Air Network)
+## Independent Corroboration
 
-### A second sensor network with a second pollutant
+The PM2.5 plume analysis above uses a single pollutant from a single sensor network. To rule out sensor-specific artifacts and to narrow the source type, we cross-checked the findings against two additional, independent monitoring systems — each measuring different pollutants on different hardware.
+
+### Chicago Open Air Network
+
+#### A second sensor network with a second pollutant
 
 The City of Chicago launched its **Open Air** monitoring network in summer 2025 — roughly 277 Clarity Node-S sensors distributed across all 77 community areas, reporting hourly PM2.5 and NO₂ through the [Chicago Open Data Portal](https://data.cityofchicago.org/). After filtering to the SE arc between Hyde Park and the Calumet corridor, approximately 53 sensors fall in our study area (bearings 144°–198°, distances 0.7–10.3 miles). The data retrieval script is at `code/chicago_openair_pull.py`.
 
@@ -181,25 +190,61 @@ This network adds value in three ways:
 
 **Note:** Clarity sensors are research-grade instruments, not EPA-certified regulatory monitors (FEM/FRM). Their readings are valid for the spatial and temporal trend analysis performed here, but cannot be used for regulatory compliance determinations.
 
-### NO₂ SE-wind enrichment
+#### NO₂ SE-wind enrichment
 
 We computed mean NO₂ during SE-wind hours vs. all other hours for source-zone sensors (> 5 miles from Hyde Park). The result: NO₂ is elevated during SE winds, independently corroborating the directional signal found in smell reports and PM2.5 data. The enrichment ratio and bootstrap 95% confidence interval are computed in the notebook (Section 6c).
 
 ![NO₂ pollution rose showing SE peak during all hours and during smell-report hours](figures/fig_no2_pollution_rose.png)
 
-### October 12 NO₂ case study
+#### October 12 NO₂ case study
 
 On October 12 — the largest smell episode — the Chicago Open Air NO₂ data show the same source-to-observer pattern seen in PurpleAir PM2.5: elevated NO₂ at distant sensors before reaching sensors closer to Hyde Park. This time-lag pattern in a second pollutant on independent hardware provides strong confirmation that airborne transport from the SE industrial corridor is real.
 
 ![October 12 NO₂ plume propagation from Chicago Open Air sensors](figures/fig_oct12_no2_plume.png)
 
-### PM2.5 cross-validation
+#### PM2.5 cross-validation
 
 We compared hourly-mean PM2.5 between PurpleAir and Chicago Open Air sensors in matched distance bands. The two networks agree well, confirming the plume signal is not an artifact of PurpleAir sensor design or calibration.
 
 ![PM2.5 cross-validation scatter plots by distance band](figures/fig_pm25_cross_validation.png)
 
 ![Chicago Open Air sensor coverage map showing 53 SE-arc sensors](figures/fig_openair_sensor_coverage.png)
+
+### EPA Regulatory Monitors
+
+#### Why this matters
+
+The PurpleAir and Chicago Open Air networks are low-cost or research-grade instruments. EPA Air Quality System (AQS) monitors are federal-reference-method instruments — the regulatory gold standard. If EPA monitors on the SE corridor show the same wind-dependent pollution pattern, the finding is not an artifact of sensor quality.
+
+Three EPA sites fall on the SE corridor (bearings 131°–155° from Hyde Park):
+
+| Site | Parameters | Distance | Bearing |
+|------|-----------|----------|---------|
+| Gary-IITRI | SO₂ | 19.6 mi | 131° SE |
+| Hammond CAAP | SO₂ | 11.8 mi | 155° SSE |
+| East Chicago-Marina | SO₂, Benzene | 12.6 mi | 141° SE |
+
+SO₂ is a signature pollutant of coking, steel, and refinery operations — the dominant industries in the Calumet corridor — and has few local confounders in a residential area like Hyde Park.[^so2-source] Benzene is a known emission from coke ovens and petroleum refining, and is directly relevant to the "chemical" and "burning plastic" smell descriptions in the survey.[^benzene-source]
+
+#### SO₂ during the October 25–27 episode
+
+The October 25–26 smell episode — four reports over two days during sustained SE wind — coincides with sharp SO₂ spikes at all three corridor monitors. The figure below shows hourly SO₂ at each site with smell report times and wind direction overlaid. SO₂ is elevated precisely when wind is from the SE and drops when wind shifts.
+
+![SO₂ at Calumet corridor monitors during Oct 24–27, with wind direction and smell reports](figures/fig_epa_so2_oct25.png)
+
+#### Benzene across the full study period
+
+East Chicago-Marina is the only SE-corridor site with hourly benzene data. The full-period timeseries shows benzene peaks clustering during SE-wind windows and smell report periods. This is a VOC directly associated with coking and refinery emissions — a closer chemical match to the reported "burning plastic" odor than any of the criteria pollutants (PM2.5, NO₂, SO₂).
+
+![Hourly benzene at East Chicago-Marina with wind direction and smell reports](figures/fig_epa_benzene.png)
+
+#### What the EPA data adds
+
+The EPA monitors provide three things the low-cost networks cannot:
+
+1. **Regulatory credibility.** Federal-reference-method data carries weight with agencies and courts in a way that PurpleAir and Clarity data do not.
+2. **Source specificity.** SO₂ and benzene are far more diagnostic of industrial combustion than PM2.5, which has many sources. Elevated benzene during SE winds directly implicates coking and/or refinery operations.
+3. **Convergent evidence.** The same directional pattern now appears in five independent measurements — smell reports, PM2.5 (two networks), NO₂, SO₂, and benzene — across three different monitoring technologies.
 
 ---
 
@@ -256,13 +301,13 @@ This analysis has several important limitations:
 
 **Hourly wind resolution.** We match reports to the nearest hourly wind observation. The actual wind at the moment of the smell may differ, especially during transition periods.
 
-**PM2.5 is not source-specific.** The plume propagation patterns are consistent with industrial transport, but PM2.5 includes contributions from all sources (traffic, construction, cooking, etc.). The directional propagation makes non-industrial explanations unlikely for the observed gradient, but we cannot attribute the PM2.5 to a specific facility or pollutant. NO₂ from the Chicago Open Air network narrows the source type (combustion), but NO₂ also has vehicle-traffic contributions.
+**No single pollutant is uniquely diagnostic.** PM2.5 has many sources (traffic, construction, cooking). NO₂ narrows the source type to combustion but includes vehicle traffic. SO₂ is more specific to industrial combustion but is measured only at the source end of the corridor, not at Hyde Park. Benzene is the most source-specific indicator (coking and refining), but is available from only one monitor. The directional convergence across all five measurements makes non-industrial explanations unlikely, but we still cannot attribute the signal to a single facility.
 
 **Self-selection bias.** People who suspect an industrial source may be more likely to report. Conversely, people who experience the smell but don't know about the survey don't report at all.
 
 **Transport approximation.** Plume travel time is estimated as distance ÷ wind speed, a first-order approximation that does not account for turbulent diffusion, vertical wind shear, or terrain effects.[^transport-approx]
 
-**Sensor accuracy.** PurpleAir sensors are low-cost instruments with known humidity sensitivity.[^purpleair-humidity] Chicago Open Air Clarity Node-S sensors are research-grade, not EPA-certified regulatory monitors. We mitigate both limitations by analyzing relative patterns (timing, gradients, directional enrichment) rather than absolute concentrations, and by cross-validating between the two independent networks.
+**Sensor accuracy.** PurpleAir sensors are low-cost instruments with known humidity sensitivity.[^purpleair-humidity] Chicago Open Air Clarity Node-S sensors are research-grade, not EPA-certified regulatory monitors. We mitigate both limitations by analyzing relative patterns (timing, gradients, directional enrichment) rather than absolute concentrations, by cross-validating between the two independent low-cost networks, and by confirming the directional signal on EPA federal-reference-method instruments (SO₂ and benzene).
 
 **Facility naming.** The notebook's original references to "Acme/SunCoke" have been updated. The facility is Indiana Harbor Coke Company, L.P., currently operated as a contractor of Cleveland-Cliffs, Inc. The coke plant was previously owned by SunCoke Energy.[^ihcc-name]
 
@@ -314,5 +359,9 @@ This analysis establishes a strong directional signal and temporal correlation b
 [^bp-filing]: BP Products North America, Q4 2025 Title V Deviation and CAM Report, Permit No. T089-30396-00453, submitted to IDEM January 30, 2026. NSR Limit Report for the same period submitted under the same permit.
 
 [^h2s-odor]: The human odor threshold for hydrogen sulfide (H₂S) is approximately 0.5–8 parts per billion (ppb). The BP Whiting 4UF Flare exceeded 162 ppm (162,000 ppb) on a 3-hour rolling average. While flare combustion destroys some H₂S, incomplete combustion during upset conditions and ground-level concentrations during poor dispersion can produce detectable odor miles downwind. Source: ATSDR, "Toxicological Profile for Hydrogen Sulfide/Carbonyl Sulfide" (2016).
+
+[^so2-source]: Sulfur dioxide (SO₂) is produced by combustion of sulfur-containing fuels and materials — primarily coal, petroleum coke, and heavy fuel oil. In the Calumet corridor, the dominant SO₂ sources are coke ovens, blast furnaces, and refinery process heaters. SO₂ has relatively few sources in residential areas, making it a useful directional tracer for industrial emissions. Source: EPA, "Sulfur Dioxide Basics."
+
+[^benzene-source]: Benzene is a volatile organic compound (VOC) emitted by coke ovens, petroleum refining, and chemical manufacturing. It is classified as a known human carcinogen (Group 1, IARC). Coke oven gas typically contains 1–3% benzene by volume. Source: ATSDR, "Toxicological Profile for Benzene" (2007); EPA, "Locating and Estimating Air Emissions from Sources of Benzene."
 
 [^clean-reports]: TMS International LLC (Permit T089-42560-00174), Industrial Steel Construction (Permit T089-43131-00161), and U.S. Steel East Chicago Tin Products (Permit T089-00300) all reported no deviations for Q4 2025 in their Part 70 quarterly reports.
