@@ -1,42 +1,5 @@
 [
   {
-    "timestamp_iso": "2026-03-14T14:20:31-0500",
-    "timestamp_display": "14 March 2026 at 02:20 PM",
-    "wind_dir": 131,
-    "wind_speed_mph": 8.2,
-    "temperature_f": 34.8,
-    "risk_score": 30,
-    "risk_level": "Moderate",
-    "eta_minutes": 292,
-    "sensors": [
-      {
-        "name": "Progressive Community Church",
-        "pm25": 1.4,
-        "dist_mi": 19.1
-      },
-      {
-        "name": "Canalport",
-        "pm25": 0.9,
-        "dist_mi": 12.4
-      },
-      {
-        "name": "Bug",
-        "pm25": 5.6,
-        "dist_mi": 6.9
-      },
-      {
-        "name": "Rooster",
-        "pm25": 3.2,
-        "dist_mi": 5.4
-      },
-      {
-        "name": "Purple-HP-1",
-        "pm25": 5.1,
-        "dist_mi": 0.1
-      }
-    ]
-  },
-  {
     "timestamp_iso": "2026-03-14T15:18:07-0500",
     "timestamp_display": "14 March 2026 at 03:18 PM",
     "wind_dir": 119,
@@ -1744,6 +1707,43 @@
     "wind_dir": 288,
     "wind_speed_mph": 9.2,
     "temperature_f": 16.0,
+    "risk_score": 0,
+    "risk_level": "Low",
+    "eta_minutes": null,
+    "sensors": [
+      {
+        "name": "Progressive Community Church",
+        "pm25": 3.9,
+        "dist_mi": 19.1
+      },
+      {
+        "name": "Canalport",
+        "pm25": 0.9,
+        "dist_mi": 12.4
+      },
+      {
+        "name": "Bug",
+        "pm25": 5.6,
+        "dist_mi": 6.9
+      },
+      {
+        "name": "Rooster",
+        "pm25": 4.9,
+        "dist_mi": 5.4
+      },
+      {
+        "name": "Purple-HP-1",
+        "pm25": 5.2,
+        "dist_mi": 0.1
+      }
+    ]
+  },
+  {
+    "timestamp_iso": "2026-03-17T04:45:45-0500",
+    "timestamp_display": "17 March 2026 at 04:45 AM",
+    "wind_dir": 288,
+    "wind_speed_mph": 9.4,
+    "temperature_f": 15.1,
     "risk_score": 0,
     "risk_level": "Low",
     "eta_minutes": null,
