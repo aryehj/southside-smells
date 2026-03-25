@@ -94,22 +94,92 @@ def compass(deg):
 # ── Data fetching ──
 
 def fetch_weather():
-    """Get current wind and temperature from Open-Meteo (free, no key)."""
+    """Get current wind/temperature and 12-hour hourly forecast from Open-Meteo."""
     url = (
         "https://api.open-meteo.com/v1/forecast"
         "?latitude=41.794&longitude=-87.59"
         "&current=wind_direction_10m,wind_speed_10m,temperature_2m"
+        "&hourly=wind_direction_10m,wind_speed_10m"
+        "&forecast_hours=12"
         "&wind_speed_unit=mph&temperature_unit=fahrenheit"
         "&timezone=America/Chicago"
     )
     resp = requests.get(url, timeout=30)
     resp.raise_for_status()
-    current = resp.json()["current"]
-    return {
+    data = resp.json()
+    current = data["current"]
+    weather = {
         "wind_dir": current["wind_direction_10m"],
         "wind_speed_mph": current["wind_speed_10m"],
         "temperature_f": current["temperature_2m"],
     }
+    hourly = data.get("hourly", {})
+    times = hourly.get("time", [])
+    dirs = hourly.get("wind_direction_10m", [])
+    speeds = hourly.get("wind_speed_10m", [])
+    forecast = [
+        {"time": t, "wind_dir": d, "wind_speed_mph": s}
+        for t, d, s in zip(times, dirs, speeds)
+    ]
+    return weather, forecast
+
+
+def compute_forecast_outlook(forecast):
+    """Scan 12-hour forecast for SE wind windows.
+
+    Returns a dict with:
+      has_se_forecast  — bool
+      se_hours         — count of SE-wind hours in the forecast
+      first_se_hour    — ISO time string of first SE hour (or None)
+      summary          — plain-English sentence
+    """
+    se_hours = []
+    for entry in forecast:
+        d = entry.get("wind_dir")
+        if d is not None and SE_WIND_MIN <= d <= SE_WIND_MAX:
+            se_hours.append(entry["time"])
+
+    if not se_hours:
+        return {
+            "has_se_forecast": False,
+            "se_hours": 0,
+            "first_se_hour": None,
+            "summary": "No SE winds forecast in the next 12 hours.",
+        }
+
+    first = se_hours[0]
+    try:
+        first_dt = datetime.fromisoformat(first)
+        now_dt = datetime.fromisoformat(forecast[0]["time"])
+        hours_away = round((first_dt - now_dt).total_seconds() / 3600)
+    except (ValueError, TypeError):
+        hours_away = None
+
+    if hours_away is not None and hours_away <= 1:
+        timing = "within the next hour"
+    elif hours_away is not None:
+        timing = f"in ~{hours_away} hour{'s' if hours_away != 1 else ''}"
+    else:
+        timing = "soon"
+
+    summary = (
+        f"SE winds expected {timing} "
+        f"({len(se_hours)} of next 12 hours in risk window)."
+    )
+    return {
+        "has_se_forecast": True,
+        "se_hours": len(se_hours),
+        "first_se_hour": first,
+        "summary": summary,
+    }
+
+
+def format_forecast_hour(iso_str):
+    """Convert '2026-03-25T08:00' to '8 AM'."""
+    try:
+        return datetime.fromisoformat(iso_str).strftime("%-I %p")
+    except (ValueError, TypeError):
+        return iso_str
 
 
 def fetch_pm25(api_key):
@@ -281,6 +351,11 @@ def send_alert_email(reading):
         body_lines.append(f"Estimated plume arrival: ~{hours}h {mins}m")
         body_lines.append("")
 
+    forecast_outlook = reading.get("forecast_outlook")
+    if forecast_outlook and forecast_outlook.get("summary"):
+        body_lines.append(f"Forecast: {forecast_outlook['summary']}")
+        body_lines.append("")
+
     body_lines.append("Sensor readings (PM2.5 µg/m³):")
     for s in reading["sensors"]:
         val = f"{s['pm25']:.1f}" if s["pm25"] is not None else "n/a"
@@ -410,6 +485,8 @@ def generate_html(reading, history):
     eta = reading.get("eta_minutes")
     timestamp_iso = reading.get("timestamp_iso", reading.get("timestamp", ""))
     timestamp_display = reading.get("timestamp_display", "")
+    forecast = reading.get("forecast", [])
+    forecast_outlook = reading.get("forecast_outlook", {})
 
     # Wind alignment and compass label for explanatory text
     wind_aligned = SE_WIND_MIN <= wind_dir <= SE_WIND_MAX
@@ -491,6 +568,54 @@ def generate_html(reading, history):
     else:
         pm25_card_html = ""
 
+    # Heads Up banner — shown when wind is NOT currently SE but SE is forecast
+    heads_up_html = ""
+    if not wind_aligned and forecast_outlook.get("has_se_forecast"):
+        se_count = forecast_outlook["se_hours"]
+        first_iso = forecast_outlook.get("first_se_hour")
+        first_label = format_forecast_hour(first_iso) if first_iso else "soon"
+        heads_up_html = (
+            f'<div class="heads-up-box">'
+            f'<span class="heads-up-label">Heads Up</span> '
+            f'Southeasterly winds are forecast starting around {first_label} '
+            f'({se_count} of the next 12 hours in the risk window). '
+            f'Air quality may deteriorate.'
+            f'</div>'
+        )
+
+    # 12-hour forecast table — always shown when forecast data is available
+    forecast_row_list = []
+    for entry in forecast:
+        fdir = entry.get("wind_dir")
+        fspd = entry.get("wind_speed_mph")
+        ftime = format_forecast_hour(entry.get("time", ""))
+        is_se_hour = fdir is not None and SE_WIND_MIN <= fdir <= SE_WIND_MAX
+        dot_class = "forecast-dot se" if is_se_hour else "forecast-dot ok"
+        dir_label = f"{fdir:.0f}° {compass(fdir)}" if fdir is not None else "—"
+        spd_label = f"{fspd:.0f}" if fspd is not None else "—"
+        forecast_row_list.append(
+            f'<tr>'
+            f'<td>{ftime}</td>'
+            f'<td>{wind_arrow_svg(fdir) if fdir is not None else ""} {dir_label}</td>'
+            f'<td>{spd_label} mph</td>'
+            f'<td><span class="{dot_class}"></span></td>'
+            f'</tr>'
+        )
+    forecast_rows = "".join(forecast_row_list)
+    if forecast_rows:
+        forecast_card_html = (
+            f'<div class="card">'
+            f'<h2>12-Hour Wind Forecast</h2>'
+            f'<table>'
+            f'<tr><th>Time</th><th>Direction</th><th>Speed</th>'
+            f'<th title="Orange = SE winds (risk window)">Risk</th></tr>'
+            f'{forecast_rows}'
+            f'</table>'
+            f'</div>'
+        )
+    else:
+        forecast_card_html = ""
+
     sparkline = sparkline_svg(history)
     sparkline_section = ""
     if sparkline and wind_aligned:
@@ -558,6 +683,14 @@ def generate_html(reading, history):
   td {{ padding:6px 8px; border-bottom:1px solid #f1f5f9; }}
   .footer {{ margin-top:20px; font-size:12px; color:#94a3b8; text-align:center; }}
   .footer a {{ color:#64748b; }}
+  .heads-up-box {{ background:#eff6ff; border-left:4px solid #3b82f6;
+    border-radius:6px; padding:10px 14px; margin-bottom:14px;
+    font-size:13px; color:#1e40af; line-height:1.5; }}
+  .heads-up-label {{ font-weight:700; }}
+  .forecast-dot {{ display:inline-block; width:12px; height:12px;
+    border-radius:50%; vertical-align:middle; }}
+  .forecast-dot.se {{ background:#f97316; }}
+  .forecast-dot.ok {{ background:#22c55e; }}
 </style>
 </head>
 <body>
@@ -576,6 +709,8 @@ def generate_html(reading, history):
 
   {eta_html}
 
+  {heads_up_html}
+
   <div class="card">
     <h2>Current Wind</h2>
     <div class="wind-row">
@@ -589,6 +724,8 @@ def generate_html(reading, history):
   </div>
 
   {pm25_card_html}
+
+  {forecast_card_html}
 
   {sparkline_section}
 
@@ -613,11 +750,14 @@ def main():
 
     # Always fetch wind — Open-Meteo requires no API key.
     print("Fetching weather from Open-Meteo...")
-    weather = fetch_weather()
+    weather, forecast = fetch_weather()
     wind_dir = weather["wind_dir"]
     print(f"  Wind: {wind_dir}° {compass(wind_dir)} "
           f"at {weather['wind_speed_mph']:.0f} mph")
     print(f"  Temp: {weather['temperature_f']:.1f}°F")
+
+    forecast_outlook = compute_forecast_outlook(forecast)
+    print(f"  Forecast: {forecast_outlook['summary']}")
 
     # Create Chicago timezone-aware datetime
     if ZoneInfo:
@@ -686,6 +826,8 @@ def main():
         "risk_level": risk_level,
         "eta_minutes": eta_minutes,
         "sensors": sensors_for_reading,
+        "forecast": forecast,
+        "forecast_outlook": forecast_outlook,
     }
 
     # ── Update history (always — regardless of wind direction) ────────────────

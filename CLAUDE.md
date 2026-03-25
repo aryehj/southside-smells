@@ -144,7 +144,15 @@ python code/smell_monitor.py
 # → regenerates docs/index.html (static status page)
 ```
 
-The monitor polls Open-Meteo for current wind conditions and PurpleAir for PM2.5 readings from 5 representative sensors along the SE plume corridor. It computes a risk score (0–100) and generates a self-contained HTML status page. PurpleAir queries are skipped when wind is not from the SE (an optimization to reduce API calls).
+The monitor polls Open-Meteo for current wind conditions (plus a 12-hour hourly wind forecast) and PurpleAir for PM2.5 readings from 5 representative sensors along the SE plume corridor. It computes a risk score (0–100) and generates a self-contained HTML status page that includes:
+
+- Current risk badge and ETA estimate
+- A "Heads Up" banner when SE winds are not currently present but are forecast within 12 hours
+- A 12-hour wind forecast table (direction, speed, SE-risk indicator per hour)
+- PM2.5 sensor readings (shown only during SE wind)
+- A risk score sparkline over the last 48 hours
+
+PurpleAir queries are skipped when wind is not from the SE (an optimization to reduce API calls). The forecast data comes from the same Open-Meteo call as current conditions — no additional API request.
 
 The GitHub Actions workflow commits updated `docs/index.html` and `data/monitor_history.json` automatically. The status page can be served via GitHub Pages from the `docs/` directory.
 
@@ -192,7 +200,7 @@ def compass(degrees) -> str:
 | `open_meteo_hyde_park.json` | Open-Meteo response JSON | `hourly.time`, `hourly.wind_direction_10m`, `hourly.wind_speed_10m` |
 | `purpleair_plume_sensors.json` | Array of sensor objects | `sensor_index`, `name`, `lat`, `lon`, `dist_mi`, `bearing` |
 | `purpleair_plume_history_all.csv` | CSV, hourly rows | `time_utc`, `sensor_index`, `name`, `dist_mi`, `bearing`, `pm25_avg` |
-| `monitor_history.json` | Array of reading objects | `timestamp`, `wind_dir`, `wind_speed`, `risk_score`, `risk_level`, `sensors` |
+| `monitor_history.json` | Array of reading objects | `timestamp_iso`, `wind_dir`, `wind_speed_mph`, `risk_score`, `risk_level`, `eta_minutes`, `sensors`, `forecast`, `forecast_outlook` |
 
 Wind direction convention: **meteorological** (the direction *from which* wind blows). Southeasterly means wind coming *from* the southeast, bearing ~135°.
 
