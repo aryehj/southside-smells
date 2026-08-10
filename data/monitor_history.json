@@ -1,110 +1,5 @@
 [
   {
-    "timestamp_iso": "2026-08-07T17:25:03-0500",
-    "timestamp_display": "7 August 2026 at 05:25 PM",
-    "wind_dir": 193,
-    "wind_speed_mph": 5.0,
-    "temperature_f": 85.1,
-    "risk_score": 0,
-    "risk_level": "Low",
-    "eta_minutes": 480,
-    "sensors": [
-      {
-        "name": "Progressive Community Church",
-        "pm25": 6.6,
-        "dist_mi": 19.1
-      },
-      {
-        "name": "Canalport",
-        "pm25": 8.0,
-        "dist_mi": 12.4
-      },
-      {
-        "name": "Bug",
-        "pm25": 5.6,
-        "dist_mi": 6.9
-      },
-      {
-        "name": "Rooster",
-        "pm25": 7.7,
-        "dist_mi": 5.4
-      },
-      {
-        "name": "Purple-HP-1",
-        "pm25": 6.9,
-        "dist_mi": 0.1
-      }
-    ],
-    "forecast": [
-      {
-        "time": "2026-08-07T17:00",
-        "wind_dir": 205,
-        "wind_speed_mph": 5.9
-      },
-      {
-        "time": "2026-08-07T18:00",
-        "wind_dir": 198,
-        "wind_speed_mph": 3.5
-      },
-      {
-        "time": "2026-08-07T19:00",
-        "wind_dir": 217,
-        "wind_speed_mph": 1.1
-      },
-      {
-        "time": "2026-08-07T20:00",
-        "wind_dir": 238,
-        "wind_speed_mph": 2.1
-      },
-      {
-        "time": "2026-08-07T21:00",
-        "wind_dir": 207,
-        "wind_speed_mph": 4.0
-      },
-      {
-        "time": "2026-08-07T22:00",
-        "wind_dir": 196,
-        "wind_speed_mph": 4.9
-      },
-      {
-        "time": "2026-08-07T23:00",
-        "wind_dir": 191,
-        "wind_speed_mph": 4.8
-      },
-      {
-        "time": "2026-08-08T00:00",
-        "wind_dir": 185,
-        "wind_speed_mph": 7.4
-      },
-      {
-        "time": "2026-08-08T01:00",
-        "wind_dir": 213,
-        "wind_speed_mph": 5.3
-      },
-      {
-        "time": "2026-08-08T02:00",
-        "wind_dir": 231,
-        "wind_speed_mph": 5.7
-      },
-      {
-        "time": "2026-08-08T03:00",
-        "wind_dir": 229,
-        "wind_speed_mph": 5.1
-      },
-      {
-        "time": "2026-08-08T04:00",
-        "wind_dir": 231,
-        "wind_speed_mph": 5.7
-      }
-    ],
-    "forecast_outlook": {
-      "has_se_forecast": true,
-      "se_hours": 4,
-      "first_se_hour": "2026-08-07T18:00",
-      "summary": "SE winds expected within the next hour (4 of next 12 hours in risk window)."
-    }
-  },
-  {
     "timestamp_iso": "2026-08-07T18:25:01-0500",
     "timestamp_display": "7 August 2026 at 06:25 PM",
     "wind_dir": 80,
@@ -5037,6 +4932,111 @@
       "se_hours": 5,
       "first_se_hour": "2026-08-09T22:00",
       "summary": "SE winds expected within the next hour (5 of next 12 hours in risk window)."
+    }
+  },
+  {
+    "timestamp_iso": "2026-08-10T00:16:32-0500",
+    "timestamp_display": "10 August 2026 at 12:16 AM",
+    "wind_dir": 170,
+    "wind_speed_mph": 14.3,
+    "temperature_f": 73.3,
+    "risk_score": 34,
+    "risk_level": "Moderate",
+    "eta_minutes": 167,
+    "sensors": [
+      {
+        "name": "Progressive Community Church",
+        "pm25": 10.2,
+        "dist_mi": 19.1
+      },
+      {
+        "name": "Canalport",
+        "pm25": 16.8,
+        "dist_mi": 12.4
+      },
+      {
+        "name": "Bug",
+        "pm25": 5.6,
+        "dist_mi": 6.9
+      },
+      {
+        "name": "Rooster",
+        "pm25": 14.9,
+        "dist_mi": 5.4
+      },
+      {
+        "name": "Purple-HP-1",
+        "pm25": 13.0,
+        "dist_mi": 0.1
+      }
+    ],
+    "forecast": [
+      {
+        "time": "2026-08-10T00:00",
+        "wind_dir": 167,
+        "wind_speed_mph": 16.1
+      },
+      {
+        "time": "2026-08-10T01:00",
+        "wind_dir": 283,
+        "wind_speed_mph": 7.1
+      },
+      {
+        "time": "2026-08-10T02:00",
+        "wind_dir": 229,
+        "wind_speed_mph": 14.6
+      },
+      {
+        "time": "2026-08-10T03:00",
+        "wind_dir": 201,
+        "wind_speed_mph": 13.0
+      },
+      {
+        "time": "2026-08-10T04:00",
+        "wind_dir": 228,
+        "wind_speed_mph": 9.3
+      },
+      {
+        "time": "2026-08-10T05:00",
+        "wind_dir": 208,
+        "wind_speed_mph": 8.9
+      },
+      {
+        "time": "2026-08-10T06:00",
+        "wind_dir": 207,
+        "wind_speed_mph": 6.8
+      },
+      {
+        "time": "2026-08-10T07:00",
+        "wind_dir": 214,
+        "wind_speed_mph": 6.8
+      },
+      {
+        "time": "2026-08-10T08:00",
+        "wind_dir": 220,
+        "wind_speed_mph": 6.7
+      },
+      {
+        "time": "2026-08-10T09:00",
+        "wind_dir": 258,
+        "wind_speed_mph": 5.5
+      },
+      {
+        "time": "2026-08-10T10:00",
+        "wind_dir": 301,
+        "wind_speed_mph": 3.9
+      },
+      {
+        "time": "2026-08-10T11:00",
+        "wind_dir": 17,
+        "wind_speed_mph": 6.8
+      }
+    ],
+    "forecast_outlook": {
+      "has_se_forecast": true,
+      "se_hours": 1,
+      "first_se_hour": "2026-08-10T00:00",
+      "summary": "SE winds expected within the next hour (1 of next 12 hours in risk window)."
     }
   }
 ]
