@@ -1,110 +1,5 @@
 [
   {
-    "timestamp_iso": "2026-08-20T07:27:04-0500",
-    "timestamp_display": "20 August 2026 at 07:27 AM",
-    "wind_dir": 15,
-    "wind_speed_mph": 10.9,
-    "temperature_f": 66.8,
-    "risk_score": 0,
-    "risk_level": "Low",
-    "eta_minutes": null,
-    "sensors": [
-      {
-        "name": "Progressive Community Church",
-        "pm25": 8.6,
-        "dist_mi": 19.1
-      },
-      {
-        "name": "Canalport",
-        "pm25": 11.7,
-        "dist_mi": 12.4
-      },
-      {
-        "name": "Bug",
-        "pm25": 5.6,
-        "dist_mi": 6.9
-      },
-      {
-        "name": "Rooster",
-        "pm25": 8.3,
-        "dist_mi": 5.4
-      },
-      {
-        "name": "Purple-HP-1",
-        "pm25": 7.1,
-        "dist_mi": 0.1
-      }
-    ],
-    "forecast": [
-      {
-        "time": "2026-08-20T07:00",
-        "wind_dir": 13,
-        "wind_speed_mph": 10.8
-      },
-      {
-        "time": "2026-08-20T08:00",
-        "wind_dir": 13,
-        "wind_speed_mph": 10.1
-      },
-      {
-        "time": "2026-08-20T09:00",
-        "wind_dir": 14,
-        "wind_speed_mph": 9.0
-      },
-      {
-        "time": "2026-08-20T10:00",
-        "wind_dir": 12,
-        "wind_speed_mph": 9.6
-      },
-      {
-        "time": "2026-08-20T11:00",
-        "wind_dir": 13,
-        "wind_speed_mph": 10.1
-      },
-      {
-        "time": "2026-08-20T12:00",
-        "wind_dir": 14,
-        "wind_speed_mph": 11.3
-      },
-      {
-        "time": "2026-08-20T13:00",
-        "wind_dir": 13,
-        "wind_speed_mph": 10.1
-      },
-      {
-        "time": "2026-08-20T14:00",
-        "wind_dir": 11,
-        "wind_speed_mph": 9.3
-      },
-      {
-        "time": "2026-08-20T15:00",
-        "wind_dir": 11,
-        "wind_speed_mph": 9.1
-      },
-      {
-        "time": "2026-08-20T16:00",
-        "wind_dir": 13,
-        "wind_speed_mph": 8.2
-      },
-      {
-        "time": "2026-08-20T17:00",
-        "wind_dir": 360,
-        "wind_speed_mph": 7.2
-      },
-      {
-        "time": "2026-08-20T18:00",
-        "wind_dir": 356,
-        "wind_speed_mph": 6.5
-      }
-    ],
-    "forecast_outlook": {
-      "has_se_forecast": false,
-      "se_hours": 0,
-      "first_se_hour": null,
-      "summary": "No SE winds forecast in the next 12 hours."
-    }
-  },
-  {
     "timestamp_iso": "2026-08-20T08:38:10-0500",
     "timestamp_display": "20 August 2026 at 08:38 AM",
     "wind_dir": 21,
@@ -5030,6 +4925,111 @@
         "time": "2026-08-22T19:00",
         "wind_dir": 37,
         "wind_speed_mph": 2.2
+      }
+    ],
+    "forecast_outlook": {
+      "has_se_forecast": false,
+      "se_hours": 0,
+      "first_se_hour": null,
+      "summary": "No SE winds forecast in the next 12 hours."
+    }
+  },
+  {
+    "timestamp_iso": "2026-08-22T09:11:41-0500",
+    "timestamp_display": "22 August 2026 at 09:11 AM",
+    "wind_dir": 322,
+    "wind_speed_mph": 11.0,
+    "temperature_f": 69.7,
+    "risk_score": 0,
+    "risk_level": "Low",
+    "eta_minutes": null,
+    "sensors": [
+      {
+        "name": "Progressive Community Church",
+        "pm25": 8.6,
+        "dist_mi": 19.1
+      },
+      {
+        "name": "Canalport",
+        "pm25": 25.4,
+        "dist_mi": 12.4
+      },
+      {
+        "name": "Bug",
+        "pm25": 5.6,
+        "dist_mi": 6.9
+      },
+      {
+        "name": "Rooster",
+        "pm25": 17.5,
+        "dist_mi": 5.4
+      },
+      {
+        "name": "Purple-HP-1",
+        "pm25": 14.2,
+        "dist_mi": 0.1
+      }
+    ],
+    "forecast": [
+      {
+        "time": "2026-08-22T09:00",
+        "wind_dir": 322,
+        "wind_speed_mph": 11.0
+      },
+      {
+        "time": "2026-08-22T10:00",
+        "wind_dir": 332,
+        "wind_speed_mph": 11.4
+      },
+      {
+        "time": "2026-08-22T11:00",
+        "wind_dir": 332,
+        "wind_speed_mph": 9.4
+      },
+      {
+        "time": "2026-08-22T12:00",
+        "wind_dir": 359,
+        "wind_speed_mph": 9.6
+      },
+      {
+        "time": "2026-08-22T13:00",
+        "wind_dir": 21,
+        "wind_speed_mph": 8.1
+      },
+      {
+        "time": "2026-08-22T14:00",
+        "wind_dir": 37,
+        "wind_speed_mph": 7.5
+      },
+      {
+        "time": "2026-08-22T15:00",
+        "wind_dir": 41,
+        "wind_speed_mph": 6.2
+      },
+      {
+        "time": "2026-08-22T16:00",
+        "wind_dir": 50,
+        "wind_speed_mph": 5.9
+      },
+      {
+        "time": "2026-08-22T17:00",
+        "wind_dir": 38,
+        "wind_speed_mph": 4.0
+      },
+      {
+        "time": "2026-08-22T18:00",
+        "wind_dir": 51,
+        "wind_speed_mph": 4.3
+      },
+      {
+        "time": "2026-08-22T19:00",
+        "wind_dir": 37,
+        "wind_speed_mph": 2.2
+      },
+      {
+        "time": "2026-08-22T20:00",
+        "wind_dir": 325,
+        "wind_speed_mph": 4.3
       }
     ],
     "forecast_outlook": {
