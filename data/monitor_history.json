@@ -1,110 +1,5 @@
 [
   {
-    "timestamp_iso": "2026-10-03T11:52:41-0500",
-    "timestamp_display": "3 October 2026 at 11:52 AM",
-    "wind_dir": 133,
-    "wind_speed_mph": 7.0,
-    "temperature_f": 61.9,
-    "risk_score": 30,
-    "risk_level": "Moderate",
-    "eta_minutes": 342,
-    "sensors": [
-      {
-        "name": "Progressive Community Church",
-        "pm25": 3.5,
-        "dist_mi": 19.1
-      },
-      {
-        "name": "Canalport",
-        "pm25": 1.9,
-        "dist_mi": 12.4
-      },
-      {
-        "name": "Bug",
-        "pm25": 5.6,
-        "dist_mi": 6.9
-      },
-      {
-        "name": "Rooster",
-        "pm25": 1.4,
-        "dist_mi": 5.4
-      },
-      {
-        "name": "Purple-HP-1",
-        "pm25": 4.8,
-        "dist_mi": 0.1
-      }
-    ],
-    "forecast": [
-      {
-        "time": "2026-10-03T11:00",
-        "wind_dir": 139,
-        "wind_speed_mph": 7.0
-      },
-      {
-        "time": "2026-10-03T12:00",
-        "wind_dir": 134,
-        "wind_speed_mph": 7.3
-      },
-      {
-        "time": "2026-10-03T13:00",
-        "wind_dir": 132,
-        "wind_speed_mph": 8.3
-      },
-      {
-        "time": "2026-10-03T14:00",
-        "wind_dir": 138,
-        "wind_speed_mph": 7.4
-      },
-      {
-        "time": "2026-10-03T15:00",
-        "wind_dir": 127,
-        "wind_speed_mph": 7.5
-      },
-      {
-        "time": "2026-10-03T16:00",
-        "wind_dir": 140,
-        "wind_speed_mph": 6.8
-      },
-      {
-        "time": "2026-10-03T17:00",
-        "wind_dir": 143,
-        "wind_speed_mph": 6.5
-      },
-      {
-        "time": "2026-10-03T18:00",
-        "wind_dir": 142,
-        "wind_speed_mph": 7.1
-      },
-      {
-        "time": "2026-10-03T19:00",
-        "wind_dir": 158,
-        "wind_speed_mph": 8.6
-      },
-      {
-        "time": "2026-10-03T20:00",
-        "wind_dir": 154,
-        "wind_speed_mph": 7.1
-      },
-      {
-        "time": "2026-10-03T21:00",
-        "wind_dir": 157,
-        "wind_speed_mph": 7.4
-      },
-      {
-        "time": "2026-10-03T22:00",
-        "wind_dir": 161,
-        "wind_speed_mph": 7.9
-      }
-    ],
-    "forecast_outlook": {
-      "has_se_forecast": true,
-      "se_hours": 12,
-      "first_se_hour": "2026-10-03T11:00",
-      "summary": "SE winds expected within the next hour (12 of next 12 hours in risk window)."
-    }
-  },
-  {
     "timestamp_iso": "2026-10-03T14:36:25-0500",
     "timestamp_display": "3 October 2026 at 02:36 PM",
     "wind_dir": 140,
@@ -5037,6 +4932,111 @@
       "se_hours": 1,
       "first_se_hour": "2026-10-14T04:00",
       "summary": "SE winds expected within the next hour (1 of next 12 hours in risk window)."
+    }
+  },
+  {
+    "timestamp_iso": "2026-10-14T09:11:34-0500",
+    "timestamp_display": "14 October 2026 at 09:11 AM",
+    "wind_dir": 37,
+    "wind_speed_mph": 9.6,
+    "temperature_f": 63.4,
+    "risk_score": 0,
+    "risk_level": "Low",
+    "eta_minutes": null,
+    "sensors": [
+      {
+        "name": "Progressive Community Church",
+        "pm25": 28.7,
+        "dist_mi": 19.1
+      },
+      {
+        "name": "Canalport",
+        "pm25": 19.1,
+        "dist_mi": 12.4
+      },
+      {
+        "name": "Bug",
+        "pm25": 5.6,
+        "dist_mi": 6.9
+      },
+      {
+        "name": "Rooster",
+        "pm25": 19.4,
+        "dist_mi": 5.4
+      },
+      {
+        "name": "Purple-HP-1",
+        "pm25": 15.2,
+        "dist_mi": 0.1
+      }
+    ],
+    "forecast": [
+      {
+        "time": "2026-10-14T09:00",
+        "wind_dir": 37,
+        "wind_speed_mph": 9.6
+      },
+      {
+        "time": "2026-10-14T10:00",
+        "wind_dir": 45,
+        "wind_speed_mph": 11.8
+      },
+      {
+        "time": "2026-10-14T11:00",
+        "wind_dir": 50,
+        "wind_speed_mph": 11.2
+      },
+      {
+        "time": "2026-10-14T12:00",
+        "wind_dir": 52,
+        "wind_speed_mph": 11.5
+      },
+      {
+        "time": "2026-10-14T13:00",
+        "wind_dir": 50,
+        "wind_speed_mph": 10.6
+      },
+      {
+        "time": "2026-10-14T14:00",
+        "wind_dir": 45,
+        "wind_speed_mph": 11.8
+      },
+      {
+        "time": "2026-10-14T15:00",
+        "wind_dir": 36,
+        "wind_speed_mph": 14.4
+      },
+      {
+        "time": "2026-10-14T16:00",
+        "wind_dir": 34,
+        "wind_speed_mph": 13.9
+      },
+      {
+        "time": "2026-10-14T17:00",
+        "wind_dir": 32,
+        "wind_speed_mph": 16.1
+      },
+      {
+        "time": "2026-10-14T18:00",
+        "wind_dir": 30,
+        "wind_speed_mph": 17.3
+      },
+      {
+        "time": "2026-10-14T19:00",
+        "wind_dir": 31,
+        "wind_speed_mph": 17.0
+      },
+      {
+        "time": "2026-10-14T20:00",
+        "wind_dir": 37,
+        "wind_speed_mph": 17.0
+      }
+    ],
+    "forecast_outlook": {
+      "has_se_forecast": false,
+      "se_hours": 0,
+      "first_se_hour": null,
+      "summary": "No SE winds forecast in the next 12 hours."
     }
   }
 ]
